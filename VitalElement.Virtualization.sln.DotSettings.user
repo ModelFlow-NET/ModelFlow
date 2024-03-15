@@ -1,0 +1,12 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e65e303e_002D2ea6_002D4b08_002D9b31_002D20023f5b07d6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="_Count_100" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::DA20F632-94B1-48B6-A4BB-5262E3EC2973::net8.0::VirtualizingCollection.Tests.VirtualizingObservableCollectionTest._Count_100&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::DA20F632-94B1-48B6-A4BB-5262E3EC2973::net8.0::VirtualizingCollection.Tests.VirtualizingObservableCollectionTest._GetEnumerator_&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e5ce17e2_002D991e_002D4919_002D848a_002Dd8e8dea0f86e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="_Count_100 #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::DA20F632-94B1-48B6-A4BB-5262E3EC2973::net8.0::VirtualizingCollection.Tests.VirtualizingObservableCollectionTest._Count_100&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
