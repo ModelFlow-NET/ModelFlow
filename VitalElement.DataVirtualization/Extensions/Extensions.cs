@@ -1,9 +1,7 @@
-namespace VitalElement.VirtualizingCollection.Extensions;
+namespace VitalElement.DataVirtualization.Extensions;
 
 using System;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Management;
 

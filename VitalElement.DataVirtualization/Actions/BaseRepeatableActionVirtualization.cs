@@ -1,4 +1,4 @@
-﻿namespace VitalElement.VirtualizingCollection.Actions
+﻿namespace VitalElement.DataVirtualization.Actions
 {
     using System;
     using Interfaces;

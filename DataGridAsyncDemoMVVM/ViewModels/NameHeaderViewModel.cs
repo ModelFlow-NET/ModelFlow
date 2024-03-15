@@ -6,8 +6,7 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReactiveUI;
-using VitalElement.VirtualizingCollection;
-using VitalElement.VirtualizingCollection.Management;
+using VitalElement.DataVirtualization.Management;
 
 public partial class NameHeaderViewModel : ViewModelBase
 {

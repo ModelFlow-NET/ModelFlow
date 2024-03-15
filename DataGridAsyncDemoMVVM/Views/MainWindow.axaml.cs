@@ -3,8 +3,8 @@ using Avalonia.Controls;
 namespace DataGridAsyncDemoMVVM.Views;
 
 using System;
-using VitalElement.VirtualizingCollection;
 using Avalonia.Threading;
+using VitalElement.DataVirtualization;
 
 public partial class MainWindow : Window
 {

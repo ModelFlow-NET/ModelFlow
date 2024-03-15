@@ -1,4 +1,4 @@
-namespace VitalElement.VirtualizingCollection.Management
+namespace VitalElement.DataVirtualization.Management
 {
     using System.Collections.Specialized;
 

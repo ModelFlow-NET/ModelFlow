@@ -1,4 +1,4 @@
-﻿namespace VitalElement.VirtualizingCollection.Interfaces
+﻿namespace VitalElement.DataVirtualization.Interfaces
 {
     public interface IBaseSourceProvider<T> : ISynchronized
     {

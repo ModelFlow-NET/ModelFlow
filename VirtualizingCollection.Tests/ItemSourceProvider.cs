@@ -1,6 +1,6 @@
 ﻿namespace VirtualizingCollection.Tests
 {
-    using VitalElement.VirtualizingCollection.Interfaces;
+    using VitalElement.DataVirtualization.Interfaces;
 
     public class ItemSourceProvider<T> : IItemSourceProvider<T>
     {

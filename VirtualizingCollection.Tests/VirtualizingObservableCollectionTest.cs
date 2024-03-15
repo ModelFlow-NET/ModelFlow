@@ -1,6 +1,6 @@
 ﻿namespace VirtualizingCollection.Tests
 {
-    using VitalElement.VirtualizingCollection;
+    using VitalElement.DataVirtualization;
 
     public class VirtualizingObservableCollectionTest
     {

@@ -1,4 +1,4 @@
-﻿namespace VitalElement.VirtualizingCollection.Pageing
+﻿namespace VitalElement.DataVirtualization.Pageing
 {
     using System;
     using System.Collections.Generic;

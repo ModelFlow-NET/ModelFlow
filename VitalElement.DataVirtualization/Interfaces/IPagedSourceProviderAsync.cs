@@ -1,4 +1,4 @@
-﻿namespace VitalElement.VirtualizingCollection.Interfaces
+﻿namespace VitalElement.DataVirtualization.Interfaces
 {
     using System.Threading.Tasks;
     using Pageing;

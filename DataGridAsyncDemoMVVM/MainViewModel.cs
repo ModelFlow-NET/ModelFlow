@@ -4,13 +4,13 @@
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Input;
-    using VitalElement.VirtualizingCollection;
-    using VitalElement.VirtualizingCollection.Pageing;
     using Avalonia.Controls;
     using Avalonia.Controls.Models.TreeDataGrid;
     using ViewModels;
-    using VitalElement.VirtualizingCollection.Management;
     using System.Linq.Dynamic.Core;
+    using VitalElement.DataVirtualization;
+    using VitalElement.DataVirtualization.Management;
+    using VitalElement.DataVirtualization.Pageing;
 
 
     public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem>

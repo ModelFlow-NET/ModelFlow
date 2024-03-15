@@ -1,4 +1,4 @@
-﻿namespace VitalElement.VirtualizingCollection
+﻿namespace VitalElement.DataVirtualization
 {
     using System;
     using System.Collections;
