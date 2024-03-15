@@ -1,6 +1,7 @@
 ﻿namespace DataGridAsyncDemoMVVM
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Input;
@@ -60,16 +61,13 @@
             });
         }
 
-        protected override Task<PagedSourceItemsPacket<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count)
+        protected override Task<IEnumerable<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count)
         {
             return Task.Run(() =>
             {
                 Task.Delay(50 + (int) Math.Round(_rand.NextDouble() * 100)).Wait(); // Just to slow it down !
-                return new PagedSourceItemsPacket<RemoteOrDbDataItem>
-                {
-                    LoadedAt = DateTime.Now,
-                    Items = (from items in FilterAndSort(_remoteDatas.Items.AsQueryable()) select items).Skip(offset).Take(count)
-                };
+                return (from items in FilterAndSort(_remoteDatas.Items.AsQueryable()) select items).Skip(offset)
+                    .Take(count).AsEnumerable();
             });
         }
 

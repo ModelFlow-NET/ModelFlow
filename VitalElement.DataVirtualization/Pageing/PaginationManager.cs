@@ -806,8 +806,8 @@
         /// <param name="newPage">The new page.</param>
         /// <param name="pageOffset">The page offset.</param>
         private void FillPage(ISourcePage<T> newPage, int pageOffset)
-        {
-            var data = Provider.GetItemsAt(pageOffset, newPage.ItemsPerPage);
+        {;
+            var data = new PagedSourceItemsPacket<T>(Provider.GetItemsAt(pageOffset, newPage.ItemsPerPage));
             newPage.WiredDateTime = data.LoadedAt;
             foreach (var o in data.Items)
             {
@@ -1074,7 +1074,7 @@
                     return;
                 }
 
-                var data = await ProviderAsync.GetItemsAtAsync(pageOffset, page.ItemsPerPage);
+                var data = new PagedSourceItemsPacket<T>(await ProviderAsync.GetItemsAtAsync(pageOffset, page.ItemsPerPage));
 
                 if (cts.IsCancellationRequested)
                 {
@@ -1220,7 +1220,7 @@
             }
             else
             {
-                oldItem = Provider.GetItemsAt(index, 1).Items.FirstOrDefault();
+                oldItem = new PagedSourceItemsPacket<T>(Provider.GetItemsAt(index, 1)).Items.FirstOrDefault();
                 if (oldItem != default(T)) Debugger.Break();
             }
 
@@ -1354,7 +1354,7 @@
 
         public T OnReplace(int index, T newItem, object timestamp)
         {
-            T oldItem;
+            T? oldItem;
 
             CalculateFromIndex(index, out var page, out var offset);
 
@@ -1365,7 +1365,7 @@
             }
             else
             {
-                oldItem = Provider.GetItemsAt(index, 1).Items.FirstOrDefault();
+                oldItem = new PagedSourceItemsPacket<T>(Provider.GetItemsAt(index, 1)).Items.FirstOrDefault();
                 if (oldItem != default(T)) Debugger.Break();
             }
 

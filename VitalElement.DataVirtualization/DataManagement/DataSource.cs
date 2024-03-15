@@ -1,5 +1,6 @@
 namespace VitalElement.DataVirtualization.DataManagement;
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VitalElement.DataVirtualization.Extensions;
 using VitalElement.DataVirtualization.Interfaces;
@@ -47,7 +48,7 @@ public abstract class DataSource<T> : IPagedSourceProviderAsync<T>, IFilteredSor
 
         protected abstract Task<int> GetCountAsync();
 
-        protected abstract Task<PagedSourceItemsPacket<T>> GetItemsAtAsync(int offset, int count);
+        protected abstract Task<IEnumerable<T>> GetItemsAtAsync(int offset, int count);
 
         protected abstract T GetPlaceHolder(int index, int page, int offset);
 
@@ -62,7 +63,7 @@ public abstract class DataSource<T> : IPagedSourceProviderAsync<T>, IFilteredSor
 
         Task<int> IPagedSourceProviderAsync<T>.GetCountAsync() => GetCountAsync();
 
-        Task<PagedSourceItemsPacket<T>> IPagedSourceProviderAsync<T>.GetItemsAtAsync(int offset, int count) => GetItemsAtAsync(offset, count);
+        Task<IEnumerable<T>> IPagedSourceProviderAsync<T>.GetItemsAtAsync(int offset, int count) => GetItemsAtAsync(offset, count);
 
         T IPagedSourceProviderAsync<T>.GetPlaceHolder(int index, int page, int offset) =>
             GetPlaceHolder(index, page, offset);

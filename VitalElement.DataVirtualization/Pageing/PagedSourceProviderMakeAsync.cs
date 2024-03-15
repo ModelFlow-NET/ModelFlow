@@ -1,6 +1,7 @@
 ﻿namespace VitalElement.DataVirtualization.Pageing
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Interfaces;
 
@@ -12,7 +13,7 @@
         }
 
         public PagedSourceProviderMakeAsync(
-            Func<int, int, PagedSourceItemsPacket<T>> funcGetItemsAt = null,
+            Func<int, int, IEnumerable<T>> funcGetItemsAt = null,
             Func<int> funcGetCount = null,
             Func<T, Task<int>> funcIndexOfAsync = null,
             Func<T, bool> funcContains = null,
@@ -56,9 +57,9 @@
             return tcs.Task;
         }
 
-        public Task<PagedSourceItemsPacket<T>> GetItemsAtAsync(int pageoffset, int count)
+        public Task<IEnumerable<T>> GetItemsAtAsync(int pageoffset, int count)
         {
-            var tcs = new TaskCompletionSource<PagedSourceItemsPacket<T>>();
+            var tcs = new TaskCompletionSource<IEnumerable<T>>();
 
             try
             {

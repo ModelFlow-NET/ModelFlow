@@ -3,10 +3,16 @@
     using System;
     using System.Collections.Generic;
 
-    public class PagedSourceItemsPacket<T>
+    internal class PagedSourceItemsPacket<T>
     {
-        public IEnumerable<T> Items { get; set; }
+        public PagedSourceItemsPacket(IEnumerable<T> items)
+        {
+            Items = items;
+            LoadedAt = DateTime.Now;
+        }
 
-        public object LoadedAt { get; set; } = DateTime.Now;
+        public IEnumerable<T> Items { get; }
+
+        public object LoadedAt { get; }
     }
 }

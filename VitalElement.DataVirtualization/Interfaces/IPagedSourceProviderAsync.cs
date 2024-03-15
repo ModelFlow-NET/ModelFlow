@@ -1,5 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Pageing;
 
@@ -9,7 +10,7 @@
 
         Task<int> GetCountAsync();
 
-        Task<PagedSourceItemsPacket<T>> GetItemsAtAsync(int offset, int count);
+        Task<IEnumerable<T>> GetItemsAtAsync(int offset, int count);
 
         T GetPlaceHolder(int index, int page, int offset);
 

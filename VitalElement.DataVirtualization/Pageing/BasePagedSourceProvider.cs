@@ -1,6 +1,7 @@
 ﻿namespace VitalElement.DataVirtualization.Pageing
 {
     using System;
+    using System.Collections.Generic;
     using Interfaces;
 
     public class BasePagedSourceProvider<T> : IPagedSourceProvider<T>
@@ -10,7 +11,7 @@
         }
 
         public BasePagedSourceProvider(
-            Func<int, int, PagedSourceItemsPacket<T>> funcGetItemsAt = null,
+            Func<int, int, IEnumerable<T>> funcGetItemsAt = null,
             Func<int> funcGetCount = null,
             Func<T, int> funcIndexOf = null,
             Func<T, bool> funcContains = null,
@@ -29,7 +30,7 @@
 
         public Func<int> FuncGetCount { get; set; }
 
-        public Func<int, int, PagedSourceItemsPacket<T>> FuncGetItemsAt { get; set; }
+        public Func<int, int, IEnumerable<T>> FuncGetItemsAt { get; set; }
 
         public Func<T, int> FuncIndexOf { get; set; }
 
@@ -55,7 +56,7 @@
             }
         }
 
-        public virtual PagedSourceItemsPacket<T> GetItemsAt(int pageoffset, int count)
+        public virtual IEnumerable<T> GetItemsAt(int pageoffset, int count)
         {
             return FuncGetItemsAt?.Invoke(pageoffset, count);
         }

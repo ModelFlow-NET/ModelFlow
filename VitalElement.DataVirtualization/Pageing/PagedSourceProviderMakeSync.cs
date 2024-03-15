@@ -1,6 +1,7 @@
 ﻿namespace VitalElement.DataVirtualization.Pageing
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Interfaces;
 
@@ -11,7 +12,7 @@
         }
 
         public PagedSourceProviderMakeSync(
-            Func<int, int, Task<PagedSourceItemsPacket<T>>> funcGetItemsAtAsync = null,
+            Func<int, int, Task<IEnumerable<T>>> funcGetItemsAtAsync = null,
             Func<Task<int>> funcGetCountAsync = null,
             Func<T, int> funcIndexOf = null,
             Func<T, Task<int>> funcIndexOfAsync = null,
@@ -41,7 +42,7 @@
 
         public Func<Task<int>> FuncGetCountAsync { get; set; }
 
-        public Func<int, int, Task<PagedSourceItemsPacket<T>>> FuncGetItemsAtAsync { get; set; }
+        public Func<int, int, Task<IEnumerable<T>>> FuncGetItemsAtAsync { get; set; }
 
         public Func<int, int, int, T> FuncGetPlaceHolder { get; set; }
 
@@ -76,7 +77,7 @@
 
         public int Count => Task.Run(GetCountAsync).GetAwaiter().GetResult();
 
-        public PagedSourceItemsPacket<T> GetItemsAt(int pageoffset, int count)
+        public IEnumerable<T> GetItemsAt(int pageoffset, int count)
         {
             return Task.Run(() => GetItemsAtAsync(pageoffset, count)).GetAwaiter().GetResult();
         }
@@ -106,7 +107,7 @@
             return FuncGetCountAsync?.Invoke();
         }
 
-        public virtual Task<PagedSourceItemsPacket<T>> GetItemsAtAsync(int pageoffset, int count)
+        public virtual Task<IEnumerable<T>> GetItemsAtAsync(int pageoffset, int count)
         {
             return FuncGetItemsAtAsync?.Invoke(pageoffset, count);
         }
