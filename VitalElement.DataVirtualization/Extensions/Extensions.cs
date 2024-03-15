@@ -3,7 +3,7 @@ namespace VitalElement.DataVirtualization.Extensions;
 using System;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
-using Management;
+using DataManagement;
 
 public static class Extensions
 {

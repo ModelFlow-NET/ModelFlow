@@ -1,9 +1,9 @@
-namespace VitalElement.DataVirtualization.Management;
+namespace VitalElement.DataVirtualization.DataManagement;
 
 using System.Threading.Tasks;
-using Extensions;
-using Interfaces;
-using Pageing;
+using VitalElement.DataVirtualization.Extensions;
+using VitalElement.DataVirtualization.Interfaces;
+using VitalElement.DataVirtualization.Pageing;
 
 public abstract class DataSource<T> : IPagedSourceProviderAsync<T>, IFilteredSortedSourceProviderAsync
         where T : class
@@ -18,10 +18,10 @@ public abstract class DataSource<T> : IPagedSourceProviderAsync<T>, IFilteredSor
         
         public string? SortQuery { get; private set; }
 
-        public DataSource()
+        public DataSource(int pageSize, int maxPages)
         {
             _collection = new VirtualizingObservableCollection<T>(
-                new PaginationManager<T>(this, pageSize: 100, maxPages: 5));
+                new PaginationManager<T>(this, pageSize: pageSize, maxPages: maxPages));
 
             FilterDescriptionList = new FilterDescriptionList();
             SortDescriptionList = new SortDescriptionList();

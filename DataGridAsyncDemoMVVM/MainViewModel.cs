@@ -9,7 +9,7 @@
     using ViewModels;
     using System.Linq.Dynamic.Core;
     using VitalElement.DataVirtualization;
-    using VitalElement.DataVirtualization.Management;
+    using VitalElement.DataVirtualization.DataManagement;
     using VitalElement.DataVirtualization.Pageing;
 
 
@@ -36,7 +36,7 @@
             return result;
         }
         
-        public RemoteOrDbDataSource()
+        public RemoteOrDbDataSource() : base (100, 5)
         {
             _remoteDatas = new RemoteOrDbDataSourceEmulation(100000);
         }

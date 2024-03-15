@@ -1,4 +1,4 @@
-namespace VitalElement.DataVirtualization.Management
+namespace VitalElement.DataVirtualization.DataManagement
 {
     public interface IFilterOrderDescription
     {
