@@ -6,9 +6,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:NameHeaderViewModel"
              x:Class="DataGridAsyncDemoMVVM.Views.NameHeaderView">
-    <StackPanel>
+    <StackPanel Orientation="Horizontal" Spacing="10">
         <TextBlock Text="Name" />
-        <TextBox Text="{Binding Filter}" />
         <Button Content="Sort" Command="{Binding ToggleSortCommand}" />
     </StackPanel>
 </UserControl>

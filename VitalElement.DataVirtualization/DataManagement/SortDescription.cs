@@ -1,6 +1,8 @@
 namespace VitalElement.DataVirtualization.DataManagement
 {
+    using System;
     using System.ComponentModel;
+    using System.Linq.Expressions;
 
     public class SortDescription : IFilterOrderDescription
     {
@@ -11,6 +13,7 @@ namespace VitalElement.DataVirtualization.DataManagement
         }
 
         public ListSortDirection? Direction { get; set; }
+
         public string PropertyName { get; set; }
     }
 }

@@ -9,35 +9,19 @@
     using Avalonia.Controls.Models.TreeDataGrid;
     using ViewModels;
     using System.Linq.Dynamic.Core;
+    using Microsoft.CodeAnalysis.Text;
     using VitalElement.DataVirtualization;
     using VitalElement.DataVirtualization.DataManagement;
     using VitalElement.DataVirtualization.Pageing;
 
 
-    public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem>
+    public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDataItem>
     {
         private readonly RemoteOrDbDataSourceEmulation _remoteDatas;
 
         private readonly Random _rand = new Random();
         
-        public IQueryable<TSource> FilterAndSort<TSource>(IQueryable<TSource> source)
-        {
-            var result = source;
-            
-            if (!string.IsNullOrWhiteSpace(FilterQuery))
-            {
-                result = source.Where(FilterQuery);
-            }
-
-            if (!string.IsNullOrWhiteSpace(SortQuery))
-            {
-                result = result.OrderBy(SortQuery);
-            }
-
-            return result;
-        }
-        
-        public RemoteOrDbDataSource() : base (100, 5)
+        public RemoteOrDbDataSource() : base (x=>x, 100, 5)
         {
             _remoteDatas = new RemoteOrDbDataSourceEmulation(100000);
         }
@@ -52,23 +36,24 @@
             throw new NotImplementedException();
         }
 
-        protected override Task<int> GetCountAsync()
+        protected override Task<int> GetCountAsync(Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterQuery)
         {
             return Task.Run(() =>
             {
                 Task.Delay(20 + (int) Math.Round(_rand.NextDouble() * 30)).Wait(); // Just to slow it down !
-                return FilterAndSort(_remoteDatas.Items.AsQueryable()).Count();
+                return filterQuery(_remoteDatas.Items.AsQueryable()).Count();
             });
         }
 
-        protected override Task<IEnumerable<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count)
+        protected override Task<IEnumerable<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count, Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> query)
         {
             return Task.Run(() =>
             {
+                
                 Task.Delay(50 + (int) Math.Round(_rand.NextDouble() * 100)).Wait(); // Just to slow it down !
-                return (from items in FilterAndSort(_remoteDatas.Items.AsQueryable()) select items).Skip(offset)
+                return (from items in query(_remoteDatas.Items.AsQueryable()) select items).Skip(offset)
                     .Take(count).AsEnumerable();
-            });
+            });   
         }
 
         protected override RemoteOrDbDataItem GetPlaceHolder(int index, int page, int offset)
@@ -92,7 +77,7 @@
 
             var source = new FlatTreeDataGridSource<RemoteOrDbDataItem>(dataSource.Collection);
             
-            source.Columns.Add(new TextColumn<RemoteOrDbDataItem, string>(new NameHeaderViewModel(dataSource, "Name"), x => x.Name, options: new TextColumnOptions<RemoteOrDbDataItem>
+            source.Columns.Add(new TextColumn<RemoteOrDbDataItem, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Name, options: new TextColumnOptions<RemoteOrDbDataItem>
             {
                 CanUserSortColumn = false
             }));

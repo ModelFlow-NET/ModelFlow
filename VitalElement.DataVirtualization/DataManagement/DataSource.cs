@@ -1,76 +1,142 @@
 namespace VitalElement.DataVirtualization.DataManagement;
 
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-using VitalElement.DataVirtualization.Extensions;
 using VitalElement.DataVirtualization.Interfaces;
 using VitalElement.DataVirtualization.Pageing;
 
-public abstract class DataSource<T> : IPagedSourceProviderAsync<T>, IFilteredSortedSourceProviderAsync
-        where T : class
+public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TDestination>
+    where TDestination : class
+{
+    private Func<IQueryable<T>, IQueryable<T>>? filterQuery;
+    private readonly VirtualizingObservableCollection<TDestination> _collection;
+    private readonly Func<T, TDestination> _selector;
+
+    public DataSource(Func<T, TDestination> selector, int pageSize, int maxPages)
     {
-        private readonly VirtualizingObservableCollection<T> _collection;
-        
-        public FilterDescriptionList FilterDescriptionList { get; }
+        _selector = selector;
+        _collection = new VirtualizingObservableCollection<TDestination>(
+            new PaginationManager<TDestination>(this, pageSize: pageSize, maxPages: maxPages));
 
-        public SortDescriptionList SortDescriptionList { get; }
-        
-        public string? FilterQuery { get; private set; }
-        
-        public string? SortQuery { get; private set; }
+        SortDescriptionList = new SortDescriptionList();
 
-        public DataSource(int pageSize, int maxPages)
-        {
-            _collection = new VirtualizingObservableCollection<T>(
-                new PaginationManager<T>(this, pageSize: pageSize, maxPages: maxPages));
-
-            FilterDescriptionList = new FilterDescriptionList();
-            SortDescriptionList = new SortDescriptionList();
-
-            FilterDescriptionList.CollectionChanged += (_, _) =>
-            {
-                _collection.Clear();
-                FilterQuery = FilterDescriptionList.ToQueryString();
-            };
-            
-            SortDescriptionList.CollectionChanged += (_, _) =>
-            {
-                _collection.Clear();
-                SortQuery = SortDescriptionList.ToQueryString();
-            };
-        }
-
-        public VirtualizingObservableCollection<T> Collection => _collection;
-        
-        protected abstract void OnReset(int count);
-
-        protected abstract Task<bool> ContainsAsync(T item);
-
-        protected abstract Task<int> GetCountAsync();
-
-        protected abstract Task<IEnumerable<T>> GetItemsAtAsync(int offset, int count);
-
-        protected abstract T GetPlaceHolder(int index, int page, int offset);
-
-        protected abstract Task<int> IndexOfAsync(T item);
-
-        void IBaseSourceProvider<T>.OnReset(int count)
-        {
-            OnReset(count);
-        }
-
-        Task<bool> IPagedSourceProviderAsync<T>.ContainsAsync(T item) => ContainsAsync(item);
-
-        Task<int> IPagedSourceProviderAsync<T>.GetCountAsync() => GetCountAsync();
-
-        Task<IEnumerable<T>> IPagedSourceProviderAsync<T>.GetItemsAtAsync(int offset, int count) => GetItemsAtAsync(offset, count);
-
-        T IPagedSourceProviderAsync<T>.GetPlaceHolder(int index, int page, int offset) =>
-            GetPlaceHolder(index, page, offset);
-
-        Task<int> IPagedSourceProviderAsync<T>.IndexOfAsync(T item) => IndexOfAsync(item);
-        
-        public bool IsSynchronized { get; }
-        
-        public object SyncRoot { get; }
+        SortDescriptionList.CollectionChanged += (_, _) => { _collection.Clear(); };
     }
+
+    public void SetFilterQuery(Func<IQueryable<T>, IQueryable<T>>? filterQuery)
+    {
+        this.filterQuery = filterQuery;
+    }
+
+    public VirtualizingObservableCollection<TDestination> Collection => _collection;
+
+    public SortDescriptionList SortDescriptionList { get; }
+
+    protected abstract void OnReset(int count);
+
+    protected abstract Task<bool> ContainsAsync(TDestination item);
+
+    protected abstract Task<int> GetCountAsync(Func<IQueryable<T>, IQueryable<T>> filterQuery);
+
+    protected abstract Task<IEnumerable<T>> GetItemsAtAsync(int offset, int count,
+        Func<IQueryable<T>, IQueryable<T>> filterSortQuery);
+
+    protected abstract TDestination GetPlaceHolder(int index, int page, int offset);
+
+    protected abstract Task<int> IndexOfAsync(TDestination item);
+
+    void IBaseSourceProvider<TDestination>.OnReset(int count)
+    {
+        OnReset(count);
+    }
+
+    Task<bool> IPagedSourceProviderAsync<TDestination>.ContainsAsync(TDestination item) => ContainsAsync(item);
+
+    Task<int> IPagedSourceProviderAsync<TDestination>.GetCountAsync() => GetCountAsync(BuildFilterQuery);
+
+    async Task<IEnumerable<TDestination>> IPagedSourceProviderAsync<TDestination>.
+        GetItemsAtAsync(int offset, int count) =>
+        (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).Select(_selector);
+
+    TDestination IPagedSourceProviderAsync<TDestination>.GetPlaceHolder(int index, int page, int offset) =>
+        GetPlaceHolder(index, page, offset);
+
+    Task<int> IPagedSourceProviderAsync<TDestination>.IndexOfAsync(TDestination item) => IndexOfAsync(item);
+
+    public bool IsSynchronized { get; }
+
+    public object SyncRoot { get; }
+
+    private IQueryable<T> AddSorting(IQueryable<T> query, ListSortDirection sortDirection, string propertyName)
+    {
+        var param = Expression.Parameter(typeof(T));
+        var prop = Expression.PropertyOrField(param, propertyName);
+        var sortLambda = Expression.Lambda(prop, param);
+
+        Expression<Func<IOrderedQueryable<T>>>? sortMethod = null;
+
+        switch (sortDirection)
+        {
+            case ListSortDirection.Ascending when query.Expression.Type == typeof(IOrderedQueryable<T>):
+                sortMethod = () => ((IOrderedQueryable<T>)query).ThenBy<T, object?>(k => null);
+                break;
+            case ListSortDirection.Ascending:
+                sortMethod = () => query.OrderBy<T, object?>(k => null);
+                break;
+            case ListSortDirection.Descending when query.Expression.Type == typeof(IOrderedQueryable<T>):
+                sortMethod = () => ((IOrderedQueryable<T>)query).ThenByDescending<T, object?>(k => null);
+                break;
+            case ListSortDirection.Descending:
+                sortMethod = () => query.OrderByDescending<T, object?>(k => null);
+                break;
+        }
+
+        var methodCallExpression = sortMethod?.Body as MethodCallExpression;
+        if (methodCallExpression == null)
+        {
+            throw new Exception("MethodCallExpression null");
+        }
+
+        var method = methodCallExpression.Method.GetGenericMethodDefinition();
+        var genericSortMethod = method.MakeGenericMethod(typeof(T), prop.Type);
+
+        return ((IOrderedQueryable<T>)genericSortMethod.Invoke(query, new object[] { query, sortLambda }) !) !;
+    }
+
+    private IQueryable<T> BuildFilterQuery(IQueryable<T> queryable)
+    {
+        if (filterQuery is not null)
+        {
+            queryable = filterQuery(queryable);
+        }
+
+        return queryable;
+    }
+
+    private IQueryable<T> BuildFilterSortQuery(IQueryable<T> queryable)
+    {
+        if (filterQuery is not null)
+        {
+            queryable = filterQuery(queryable);
+        }
+
+        var sorting = SortDescriptionList;
+
+        if (sorting.Any())
+        {
+            foreach (var sort in sorting)
+            {
+                if (sort.Direction != null)
+                {
+                    queryable = AddSorting(queryable, sort.Direction.Value, sort.PropertyName);
+                }
+            }
+        }
+
+        return queryable;
+    }
+}
