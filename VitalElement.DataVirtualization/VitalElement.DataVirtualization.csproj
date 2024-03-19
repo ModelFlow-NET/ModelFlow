@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;</TargetFrameworks>
     <RootNamespace>VitalElement.DataVirtualization</RootNamespace>
     <AssemblyName>VitalElement.DataVirtualization</AssemblyName>
-    <Version>0.0.7</Version>
+    <Version>0.0.8</Version>
     <PackageId>VitalElement.DataVirtualization</PackageId>
     <Product>VitalElement.DataVirtualization</Product>
     <LangVersion>latestmajor</LangVersion>
