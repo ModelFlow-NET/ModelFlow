@@ -26,6 +26,13 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
 
         SortDescriptionList.CollectionChanged += (_, _) => { _collection.Clear(); };
     }
+    
+    public bool IsInitialised { get; private set; }
+
+    public void InvalidateFilters()
+    {
+        _collection.Clear();
+    }
 
     public void SetFilterQuery(Func<IQueryable<T>, IQueryable<T>>? filterQuery)
     {
@@ -56,7 +63,12 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
 
     Task<bool> IPagedSourceProviderAsync<TDestination>.ContainsAsync(TDestination item) => ContainsAsync(item);
 
-    Task<int> IPagedSourceProviderAsync<TDestination>.GetCountAsync() => GetCountAsync(BuildFilterQuery);
+    async Task<int> IPagedSourceProviderAsync<TDestination>.GetCountAsync()
+    {
+        var result = await GetCountAsync(BuildFilterQuery);
+        IsInitialised = true;
+        return result;
+    }
 
     async Task<IEnumerable<TDestination>> IPagedSourceProviderAsync<TDestination>.
         GetItemsAtAsync(int offset, int count) =>
