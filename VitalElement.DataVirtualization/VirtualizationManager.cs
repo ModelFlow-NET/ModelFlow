@@ -15,13 +15,13 @@
 
         private bool _processing;
 
-        private Action<Action> _uiThreadExcecuteAction;
+        private Func<Action, Task> _uiThreadExcecuteAction;
 
         public static VirtualizationManager Instance { get; } = new VirtualizationManager();
 
         public static bool IsInitialized { get; private set; }
 
-        public Action<Action> UiThreadExcecuteAction
+        public Func<Action, Task> UiThreadExcecuteAction
         {
             get => _uiThreadExcecuteAction;
             set
@@ -113,5 +113,15 @@
         {
             RunOnUi(new ActionVirtualizationWrapper(action));
         }
+        
+        public async Task RunOnUiAsync(IVirtualizationAction action)
+        {
+            if (UiThreadExcecuteAction == null) // PLV
+                throw new Exception(
+                    "VirtualizationManager isn’t already initialized !  set the VirtualizationManager’s UIThreadExcecuteAction (VirtualizationManager.Instance.UIThreadExcecuteAction = a => Dispatcher.Invoke( a );)");
+            
+            await UiThreadExcecuteAction.Invoke(action.DoAction);
+        }
+        
     }
 }

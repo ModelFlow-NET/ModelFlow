@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Actions;
 using VitalElement.DataVirtualization.Interfaces;
 using VitalElement.DataVirtualization.Pageing;
 
@@ -70,9 +71,19 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         return result;
     }
 
-    async Task<IEnumerable<TDestination>> IPagedSourceProviderAsync<TDestination>.
-        GetItemsAtAsync(int offset, int count) =>
-        (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).Select(_selector);
+    async Task<IEnumerable<TDestination>> IPagedSourceProviderAsync<TDestination>.GetItemsAtAsync(int offset, int count)
+    {
+        var items = await GetItemsAtAsync(offset, count, BuildFilterSortQuery);
+
+        IEnumerable<TDestination> result = Enumerable.Empty<TDestination>();
+
+        await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(() =>
+        {
+            result = items.Select(_selector).ToList();
+        }));
+
+        return result;
+    }
 
     TDestination IPagedSourceProviderAsync<TDestination>.GetPlaceHolder(int index, int page, int offset) =>
         GetPlaceHolder(index, page, offset);

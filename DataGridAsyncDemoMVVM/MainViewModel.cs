@@ -8,8 +8,6 @@
     using Avalonia.Controls;
     using Avalonia.Controls.Models.TreeDataGrid;
     using ViewModels;
-    using System.Linq.Dynamic.Core;
-    using Microsoft.CodeAnalysis.Text;
     using VitalElement.DataVirtualization;
     using VitalElement.DataVirtualization.DataManagement;
     using VitalElement.DataVirtualization.Pageing;
@@ -40,7 +38,7 @@
         {
             return Task.Run(() =>
             {
-                Task.Delay(20 + (int) Math.Round(_rand.NextDouble() * 30)).Wait(); // Just to slow it down !
+                Task.Delay(1000 + (int) Math.Round(_rand.NextDouble() * 30)).Wait(); // Just to slow it down !
                 return filterQuery(_remoteDatas.Items.AsQueryable()).Count();
             });
         }
@@ -49,8 +47,7 @@
         {
             return Task.Run(() =>
             {
-                
-                Task.Delay(50 + (int) Math.Round(_rand.NextDouble() * 100)).Wait(); // Just to slow it down !
+                Task.Delay(1500 + (int) Math.Round(_rand.NextDouble() * 100)).Wait(); // Just to slow it down !
                 return (from items in query(_remoteDatas.Items.AsQueryable()) select items).Skip(offset)
                     .Take(count).AsEnumerable();
             });   

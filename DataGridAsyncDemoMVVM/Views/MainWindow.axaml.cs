@@ -16,7 +16,10 @@ public partial class MainWindow : Window
             //we’re using Dispatcher.Invoke to give the VirtualizationManager access
             //to the dispatcher thread, and using a DispatcherTimer to run the background
             //operations the VirtualizationManager needs to run to reclaim pages and manage memory.
-            VirtualizationManager.Instance.UiThreadExcecuteAction = a => Dispatcher.UIThread.Post	(a);
+            VirtualizationManager.Instance.UiThreadExcecuteAction = a =>
+            {
+                return Dispatcher.UIThread.InvokeAsync(a).GetTask();
+            };
 
             DispatcherTimer.Run(() =>
             {
