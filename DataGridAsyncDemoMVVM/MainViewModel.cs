@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading.Tasks;
     using System.Windows.Input;
     using Avalonia.Controls;
@@ -32,6 +33,11 @@
         protected override Task<bool> ContainsAsync(RemoteOrDbDataItem item)
         {
             throw new NotImplementedException();
+        }
+
+        public override Task<RemoteOrDbDataItem?> GetItemAsync(Expression<Func<RemoteOrDbDataItem, bool>> predicate)
+        {
+            return Task.FromResult((RemoteOrDbDataItem?)null);
         }
 
         protected override Task<int> GetCountAsync(Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterQuery)

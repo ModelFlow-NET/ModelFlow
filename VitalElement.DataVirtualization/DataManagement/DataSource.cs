@@ -53,6 +53,8 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
     protected abstract Task<IEnumerable<T>> GetItemsAtAsync(int offset, int count,
         Func<IQueryable<T>, IQueryable<T>> filterSortQuery);
 
+    public abstract Task<T?> GetItemAsync(Expression<Func<T, bool>> predicate);
+
     protected abstract TDestination GetPlaceHolder(int index, int page, int offset);
 
     protected abstract Task<int> IndexOfAsync(TDestination item);
@@ -68,6 +70,23 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
     {
         var result = await GetCountAsync(BuildFilterQuery);
         IsInitialised = true;
+        return result;
+    }
+
+    public async Task<TDestination?> GetViewModelAsync(Expression<Func<T, bool>> predicate)
+    {
+        TDestination? result = null;
+        
+        var item = await GetItemAsync(predicate);
+
+        if (item != null)
+        {
+            await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(() =>
+            {
+                result = _selector(item);
+            }));
+        }
+
         return result;
     }
 
