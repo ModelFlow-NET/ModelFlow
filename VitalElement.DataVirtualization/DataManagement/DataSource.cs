@@ -81,9 +81,14 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
 
         if (item != null)
         {
-            await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(() =>
+            await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
             {
                 result = _selector(item);
+                
+                if (result is INeedsInitializationAsync toInitialize)
+                {
+                    await toInitialize.InitializeAsync();
+                }
             }));
         }
 
@@ -94,11 +99,21 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
     {
         var items = await GetItemsAtAsync(offset, count, BuildFilterSortQuery);
 
-        IEnumerable<TDestination> result = Enumerable.Empty<TDestination>();
+        List<TDestination> result = Enumerable.Empty<TDestination>().ToList();
 
-        await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(() =>
+        await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
         {
             result = items.Select(_selector).ToList();
+            
+            var toInitialize = result.OfType<INeedsInitializationAsync>().ToList();
+
+            if (toInitialize.Any())
+            {
+                foreach (var initialise in toInitialize)
+                {
+                    await initialise.InitializeAsync(); 
+                }
+            }
         }));
 
         return result;
