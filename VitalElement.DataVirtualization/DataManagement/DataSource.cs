@@ -59,6 +59,8 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
 
     protected abstract Task<int> IndexOfAsync(TDestination item);
 
+    protected abstract void OnMaterialized(TDestination item);
+
     void IBaseSourceProvider<TDestination>.OnReset(int count)
     {
         OnReset(count);
@@ -83,7 +85,7 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         {
             await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
             {
-                result = _selector(item);
+                result = Materialize(item);
                 
                 if (result is INeedsInitializationAsync toInitialize)
                 {
@@ -91,6 +93,15 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
                 }
             }));
         }
+
+        return result;
+    }
+
+    private TDestination Materialize(T item)
+    {
+        var result = _selector(item);
+        
+        OnMaterialized(result);
 
         return result;
     }
@@ -103,7 +114,7 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
 
         await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
         {
-            result = items.Select(_selector).ToList();
+            result = items.Select(Materialize).ToList();
             
             var toInitialize = result.OfType<INeedsInitializationAsync>().ToList();
 
