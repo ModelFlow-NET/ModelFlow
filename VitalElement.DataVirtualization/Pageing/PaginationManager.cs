@@ -1390,35 +1390,39 @@
                 EnsureCount();
             }
 
-            var index = Provider.IndexOf(item);
-            CalculateFromIndex(index, out var page, out var offset);
-
-            if (IsPageWired(page))
+            int index = -1;
+            lock (PageLock)
             {
-                var dataPage = SafeGetPage(page, null, index);
-                dataPage.RemoveAt(offset, timestamp, ExpiryComparer);
-            }
-
-            AddOrUpdateAdjustment(page, -1);
-
-            if (page == _basePage)
-            {
-                var items = PageSize;
-                if (_deltas.ContainsKey(page))
+                for (int i = 0; i < _pages.Count; i++)
                 {
-                    items += _deltas[page].Delta;
-                }
+                    var dataPage = _pages[i];
 
-                if (items == 0)
-                {
-                    _deltas.Remove(page);
-                    _basePage++;
-                }
-            }
+                    index = dataPage.IndexOf(item);
 
-            if (IsAsync)
-            {
-                var test = GetAt(index, this);
+                    if (index != -1)
+                    {
+                        dataPage.RemoveAt(index, DateTime.Now, ExpiryComparer);
+
+                        AddOrUpdateAdjustment(i, -1);
+
+                        if (i == _basePage)
+                        {
+                            var items = PageSize;
+                            if (_deltas.ContainsKey(i))
+                            {
+                                items += _deltas[i].Delta;
+                            }
+
+                            if (items == 0)
+                            {
+                                _deltas.Remove(i);
+                                _basePage++;
+                            }
+                        }
+
+                        break;
+                    }
+                }
             }
 
             if (Provider is IEditableProviderItemBased<T> editableProvider)
