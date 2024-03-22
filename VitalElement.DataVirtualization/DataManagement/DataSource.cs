@@ -75,6 +75,14 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         return result;
     }
 
+    /// <summary>
+    /// Gets the count from the database, applying any filters.
+    /// Note: this public GetCountAsync is for end users only.
+    /// it is not the one called by the data virtualization.
+    /// </summary>
+    /// <returns>int - the number of rows.</returns>
+    public async Task<int> GetCountAsync() => await GetCountAsync(BuildFilterQuery);
+
     public async Task<TDestination?> GetViewModelAsync(Expression<Func<T, bool>> predicate)
     {
         TDestination? result = null;
@@ -85,21 +93,26 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         {
             await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
             {
-                result = Materialize(item);
-                
                 if (result is INeedsInitializationAsync toInitialize)
                 {
                     await toInitialize.InitializeAsync();
                 }
+
+                result = await Materialize(item);
             }));
         }
 
         return result;
     }
 
-    private TDestination Materialize(T item)
+    private async Task<TDestination> Materialize(T item)
     {
         var result = _selector(item);
+        
+        if (result is INeedsInitializationAsync toInitialize)
+        {
+            await toInitialize.InitializeAsync();
+        }
         
         OnMaterialized(result);
 
@@ -108,24 +121,23 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
 
     async Task<IEnumerable<TDestination>> IPagedSourceProviderAsync<TDestination>.GetItemsAtAsync(int offset, int count)
     {
-        var items = await GetItemsAtAsync(offset, count, BuildFilterSortQuery);
+        var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
 
-        List<TDestination> result = Enumerable.Empty<TDestination>().ToList();
+        List<TDestination> result = new List<TDestination>();
+
+        var completionSource = new TaskCompletionSource<bool>();
 
         await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
         {
-            result = items.Select(Materialize).ToList();
-            
-            var toInitialize = result.OfType<INeedsInitializationAsync>().ToList();
-
-            if (toInitialize.Any())
+            foreach (var item in items)
             {
-                foreach (var initialise in toInitialize)
-                {
-                    await initialise.InitializeAsync(); 
-                }
+                result.Add(await Materialize(item));
             }
+
+            completionSource.SetResult(true);
         }));
+
+        await completionSource.Task;
 
         return result;
     }
