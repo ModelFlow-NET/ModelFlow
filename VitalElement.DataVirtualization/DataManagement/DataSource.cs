@@ -10,65 +10,269 @@ using Actions;
 using VitalElement.DataVirtualization.Interfaces;
 using VitalElement.DataVirtualization.Pageing;
 
-public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TDestination>
-    where TDestination : class
+public class DataSource
 {
-    private Func<IQueryable<T>, IQueryable<T>>? filterQuery;
-    private readonly VirtualizingObservableCollection<TDestination> _collection;
-    private readonly Func<T, TDestination> _selector;
+    public static IDataSourceCallbacks? DataSourceCallbacks;
+}
 
-    public DataSource(Func<T, TDestination> selector, int pageSize, int maxPages)
+public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceProviderAsync<TViewModel>
+    where TViewModel : class
+{
+    private Func<IQueryable<TModel>, IQueryable<TModel>>? _filterQuery;
+    private readonly VirtualizingObservableCollection<TViewModel> _collection;
+    private readonly Func<TModel, TViewModel> _selector;
+    private readonly bool _autoSyncEnabled;
+
+    public DataSource(Func<TModel, TViewModel> selector, int pageSize, int maxPages, bool autoSync = true)
     {
+        SyncRoot = new object();
+        _autoSyncEnabled = autoSync;
         _selector = selector;
-        _collection = new VirtualizingObservableCollection<TDestination>(
-            new PaginationManager<TDestination>(this, pageSize: pageSize, maxPages: maxPages));
+        _collection = new VirtualizingObservableCollection<TViewModel>(
+            new PaginationManager<TViewModel>(this, pageSize: pageSize, maxPages: maxPages));
 
         SortDescriptionList = new SortDescriptionList();
 
-        SortDescriptionList.CollectionChanged += (_, _) => { _collection.Clear(); };
+        SortDescriptionList.CollectionChanged += (_, _) => { Invalidate(); };
     }
-    
+
+    /// <summary>
+    /// Indicates that the count property has been accessed at least once.
+    /// This means that a DataGrid or List has connected to the datasource.
+    /// </summary>
     public bool IsInitialised { get; private set; }
 
-    public void InvalidateFilters()
+    /// <summary>
+    /// Indicates if the datasource is Threadsafe.
+    /// </summary>
+    public bool IsSynchronized => false;
+
+    /// <summary>
+    /// An object used to synchronise access with the underlying collection.
+    /// </summary>
+    public object SyncRoot { get; }
+
+    /// <summary>
+    /// Invalidates the datasource, causing the count and items to be retrieved again.
+    /// This should be called if the filter query needs to be re-evaluated. Changing the sort descriptions
+    /// this will be called automatically.
+    /// </summary>
+    public void Invalidate()
     {
         _collection.Clear();
     }
 
-    public void SetFilterQuery(Func<IQueryable<T>, IQueryable<T>>? filterQuery)
+    /// <summary>
+    /// Sets a filter query on the datasource. All accesses to the datasource will be filtered according to this query.
+    /// </summary>
+    /// <param name="filterQuery">A Func that retrieves the query.</param>
+    public void SetFilterQuery(Func<IQueryable<TModel>, IQueryable<TModel>>? filterQuery)
     {
-        this.filterQuery = filterQuery;
+        _filterQuery = filterQuery;
     }
 
-    public VirtualizingObservableCollection<TDestination> Collection => _collection;
+    /// <summary>
+    /// Retrieves the underlying virtualized observable collection.
+    /// This is exposed as an IReadOnlyCollection, as the user should use the DataSource api to modify its contents.
+    /// The collection is an VirtualizedObservableCollection meaning that only the items accessed are materialized
+    /// via the datasource.
+    /// </summary>
+    public IReadOnlyObservableCollection<TViewModel> Collection => _collection;
 
+    /// <summary>
+    /// A list of sort descriptions that can be changed.
+    /// Invalidation of the datasource is automatic when this is modified.
+    /// </summary>
     public SortDescriptionList SortDescriptionList { get; }
 
+    /// <summary>
+    /// Called when the datasource is reset.
+    /// </summary>
+    /// <param name="count">The number of items in the datasource.</param>
     protected abstract void OnReset(int count);
 
-    protected abstract Task<bool> ContainsAsync(TDestination item);
+    /// <summary>
+    /// Determines if the datasource contains a viewmodel.
+    /// </summary>
+    /// <param name="item">The viewmodel to check</param>
+    /// <returns>true if the datasource contains the model, false otherwise.</returns>
+    protected abstract Task<bool> ContainsAsync(TViewModel item);
 
-    protected abstract Task<int> GetCountAsync(Func<IQueryable<T>, IQueryable<T>> filterQuery);
+    /// <summary>
+    /// Gets the total number of TModel in the DataSource when filtered.
+    /// </summary>
+    /// <param name="filterQuery">The filter query to filter the datasource.</param>
+    /// <returns>the number of items as an integer.</returns>
+    protected abstract Task<int> GetCountAsync(Func<IQueryable<TModel>, IQueryable<TModel>> filterQuery);
 
-    protected abstract Task<IEnumerable<T>> GetItemsAtAsync(int offset, int count,
-        Func<IQueryable<T>, IQueryable<T>> filterSortQuery);
+    protected abstract Task<IEnumerable<TModel>> GetItemsAtAsync(int offset, int count,
+        Func<IQueryable<TModel>, IQueryable<TModel>> filterSortQuery);
 
-    public abstract Task<T?> GetItemAsync(Expression<Func<T, bool>> predicate);
+    /// <summary>
+    /// Retrieves a single row from the datasource.
+    /// </summary>
+    /// <param name="predicate">The predicate to select the row.</param>
+    /// <returns>The model representing the row, or null if no row matches the predicate.</returns>
+    public abstract Task<TModel?> GetItemAsync(Expression<Func<TModel, bool>> predicate);
 
-    protected abstract TDestination GetPlaceHolder(int index, int page, int offset);
+    /// <summary>
+    /// Gets a placeholder to represent the viewmodel whilst data is yet to be retrieved.
+    /// It is recommended to return a singleton here, to save memory usage.
+    /// </summary>
+    /// <param name="index">The index of the item.</param>
+    /// <param name="page">The page index of the item.</param>
+    /// <param name="offset">The offset of the item.</param>
+    /// <returns></returns>
+    protected abstract TViewModel GetPlaceHolder(int index, int page, int offset);
 
-    protected abstract Task<int> IndexOfAsync(TDestination item);
+    protected abstract Task<int> IndexOfAsync(TViewModel item);
 
-    protected abstract void OnMaterialized(TDestination item);
+    /// <summary>
+    /// This will be called when a ViewModel is materialized. It is called AFTER any async initialisation has occurred.
+    /// This can be used to subscribe to model changes. After this is called, Database synchronisation will be active.
+    /// </summary>
+    /// <param name="item">The ViewModel that was created.</param>
+    protected virtual void OnMaterialized(TViewModel item)
+    {
+        if (_autoSyncEnabled && item is IAutoSynchronize vm)
+        {
+            this.AutoManage(vm);
+        }
+    }
+    
+    public async Task<bool> CreateAsync(TViewModel viewModel)
+    {
+        try
+        {
+            if (DataSourceCallbacks is { })
+            {
+                if (!await DataSourceCallbacks.OnBeforeCreateOperation(viewModel))
+                {
+                    return false;
+                }
+            }
 
-    void IBaseSourceProvider<TDestination>.OnReset(int count)
+            bool isSuccess = await DoCreateAsync(viewModel);
+
+            if (isSuccess)
+            {
+                // to do, maintain a dictionary, so we dont get duplicates when retrieved from source.
+                _collection.Add(viewModel);
+            }
+            
+            if (DataSourceCallbacks is { })
+            {
+                await DataSourceCallbacks.OnCreateOperationCompleted(viewModel, isSuccess);
+            }
+
+            return isSuccess;
+        }
+        catch (Exception e)
+        {
+            if (DataSourceCallbacks is { })
+            {
+                await DataSourceCallbacks.OnCreateException(viewModel, e);
+            }
+        }
+
+        return false;
+    }
+    
+    /// <summary>
+    /// Creates an entry in the datasource to store the ViewModel 
+    /// </summary>
+    /// <param name="item">The viewmodel.</param>
+    /// <returns>True if the operation was a success or false if it failed.</returns>
+    protected abstract Task<bool> DoCreateAsync(TViewModel item);
+
+    /// <summary>
+    /// Updates an entry in the datasource. 
+    /// </summary>
+    /// <param name="item">The viewmodel.</param>
+    /// <returns>True if the operation was a success or false if it failed.</returns>
+    protected abstract Task<bool> DoUpdateAsync(TViewModel viewModel);
+
+    public async Task UpdateAsync(TViewModel viewModel)
+    {
+        try
+        {
+            if (DataSourceCallbacks is { })
+            {
+                if (!await DataSourceCallbacks.OnBeforeUpdateOperation(viewModel))
+                {
+                    return;
+                }
+            }
+
+            bool isSuccess = await DoUpdateAsync(viewModel);
+
+            if (DataSourceCallbacks is { })
+            {
+                await DataSourceCallbacks.OnUpdateOperationCompleted(viewModel, isSuccess);
+            }
+        }
+        catch (Exception e)
+        {
+            if (DataSourceCallbacks is { } callbacks)
+            {
+                await callbacks.OnUpdateException(viewModel, e);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Deletes an entry in the datasource. 
+    /// </summary>
+    /// <param name="item">The viewmodel.</param>
+    /// <returns>True if the operation was a success or false if it failed.</returns>
+    protected abstract Task<bool> DoDeleteAsync(TViewModel item);
+
+    public async Task<bool> DeleteAsync(TViewModel viewModel)
+    {
+        try
+        {
+            if (DataSourceCallbacks is { })
+            {
+                if (!await DataSourceCallbacks.OnBeforeDeleteOperation(viewModel))
+                {
+                    return false;
+                }
+            }
+
+            bool isSuccess = await DoDeleteAsync(viewModel);
+
+            if (isSuccess)
+            {
+                _collection.Remove(viewModel);
+            }
+            
+            if (DataSourceCallbacks is { })
+            {
+                await DataSourceCallbacks.OnDeleteOperationCompleted(viewModel, isSuccess);
+            }
+
+            return isSuccess;
+        }
+        catch (Exception e)
+        {
+            if (DataSourceCallbacks is { })
+            {
+                await DataSourceCallbacks.OnDeleteException(viewModel, e);
+            }
+        }
+
+        return false;
+    }
+    
+
+    void IBaseSourceProvider<TViewModel>.OnReset(int count)
     {
         OnReset(count);
     }
 
-    Task<bool> IPagedSourceProviderAsync<TDestination>.ContainsAsync(TDestination item) => ContainsAsync(item);
+    Task<bool> IPagedSourceProviderAsync<TViewModel>.ContainsAsync(TViewModel item) => ContainsAsync(item);
 
-    async Task<int> IPagedSourceProviderAsync<TDestination>.GetCountAsync()
+    async Task<int> IPagedSourceProviderAsync<TViewModel>.GetCountAsync()
     {
         var result = await GetCountAsync(BuildFilterQuery);
         IsInitialised = true;
@@ -83,10 +287,10 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
     /// <returns>int - the number of rows.</returns>
     public async Task<int> GetCountAsync() => await GetCountAsync(BuildFilterQuery);
 
-    public async Task<TDestination?> GetViewModelAsync(Expression<Func<T, bool>> predicate)
+    public async Task<TViewModel?> GetViewModelAsync(Expression<Func<TModel, bool>> predicate)
     {
-        TDestination? result = null;
-        
+        TViewModel? result = null;
+
         var item = await GetItemAsync(predicate);
 
         if (item != null)
@@ -105,25 +309,25 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         return result;
     }
 
-    private async Task<TDestination> Materialize(T item)
+    private async Task<TViewModel> Materialize(TModel item)
     {
         var result = _selector(item);
-        
+
         if (result is INeedsInitializationAsync toInitialize)
         {
             await toInitialize.InitializeAsync();
         }
-        
+
         OnMaterialized(result);
 
         return result;
     }
 
-    async Task<IEnumerable<TDestination>> IPagedSourceProviderAsync<TDestination>.GetItemsAtAsync(int offset, int count)
+    async Task<IEnumerable<TViewModel>> IPagedSourceProviderAsync<TViewModel>.GetItemsAtAsync(int offset, int count)
     {
         var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
 
-        List<TDestination> result = new List<TDestination>();
+        List<TViewModel> result = new List<TViewModel>();
 
         var completionSource = new TaskCompletionSource<bool>();
 
@@ -142,36 +346,33 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         return result;
     }
 
-    TDestination IPagedSourceProviderAsync<TDestination>.GetPlaceHolder(int index, int page, int offset) =>
+    TViewModel IPagedSourceProviderAsync<TViewModel>.GetPlaceHolder(int index, int page, int offset) =>
         GetPlaceHolder(index, page, offset);
 
-    Task<int> IPagedSourceProviderAsync<TDestination>.IndexOfAsync(TDestination item) => IndexOfAsync(item);
+    Task<int> IPagedSourceProviderAsync<TViewModel>.IndexOfAsync(TViewModel item) => IndexOfAsync(item);
 
-    public bool IsSynchronized { get; }
-
-    public object SyncRoot { get; }
-
-    private IQueryable<T> AddSorting(IQueryable<T> query, ListSortDirection sortDirection, string propertyName)
+    private IQueryable<TModel> AddSorting(IQueryable<TModel> query, ListSortDirection sortDirection,
+        string propertyName)
     {
-        var param = Expression.Parameter(typeof(T));
+        var param = Expression.Parameter(typeof(TModel));
         var prop = Expression.PropertyOrField(param, propertyName);
         var sortLambda = Expression.Lambda(prop, param);
 
-        Expression<Func<IOrderedQueryable<T>>>? sortMethod = null;
+        Expression<Func<IOrderedQueryable<TModel>>>? sortMethod = null;
 
         switch (sortDirection)
         {
-            case ListSortDirection.Ascending when query.Expression.Type == typeof(IOrderedQueryable<T>):
-                sortMethod = () => ((IOrderedQueryable<T>)query).ThenBy<T, object?>(k => null);
+            case ListSortDirection.Ascending when query.Expression.Type == typeof(IOrderedQueryable<TModel>):
+                sortMethod = () => ((IOrderedQueryable<TModel>)query).ThenBy<TModel, object?>(k => null);
                 break;
             case ListSortDirection.Ascending:
-                sortMethod = () => query.OrderBy<T, object?>(k => null);
+                sortMethod = () => query.OrderBy<TModel, object?>(k => null);
                 break;
-            case ListSortDirection.Descending when query.Expression.Type == typeof(IOrderedQueryable<T>):
-                sortMethod = () => ((IOrderedQueryable<T>)query).ThenByDescending<T, object?>(k => null);
+            case ListSortDirection.Descending when query.Expression.Type == typeof(IOrderedQueryable<TModel>):
+                sortMethod = () => ((IOrderedQueryable<TModel>)query).ThenByDescending<TModel, object?>(k => null);
                 break;
             case ListSortDirection.Descending:
-                sortMethod = () => query.OrderByDescending<T, object?>(k => null);
+                sortMethod = () => query.OrderByDescending<TModel, object?>(k => null);
                 break;
         }
 
@@ -182,26 +383,26 @@ public abstract class DataSource<TDestination, T> : IPagedSourceProviderAsync<TD
         }
 
         var method = methodCallExpression.Method.GetGenericMethodDefinition();
-        var genericSortMethod = method.MakeGenericMethod(typeof(T), prop.Type);
+        var genericSortMethod = method.MakeGenericMethod(typeof(TModel), prop.Type);
 
-        return ((IOrderedQueryable<T>)genericSortMethod.Invoke(query, new object[] { query, sortLambda }) !) !;
+        return ((IOrderedQueryable<TModel>)genericSortMethod.Invoke(query, new object[] { query, sortLambda }) !) !;
     }
 
-    private IQueryable<T> BuildFilterQuery(IQueryable<T> queryable)
+    private IQueryable<TModel> BuildFilterQuery(IQueryable<TModel> queryable)
     {
-        if (filterQuery is not null)
+        if (_filterQuery is not null)
         {
-            queryable = filterQuery(queryable);
+            queryable = _filterQuery(queryable);
         }
 
         return queryable;
     }
 
-    private IQueryable<T> BuildFilterSortQuery(IQueryable<T> queryable)
+    private IQueryable<TModel> BuildFilterSortQuery(IQueryable<TModel> queryable)
     {
-        if (filterQuery is not null)
+        if (_filterQuery is not null)
         {
-            queryable = filterQuery(queryable);
+            queryable = _filterQuery(queryable);
         }
 
         var sorting = SortDescriptionList;

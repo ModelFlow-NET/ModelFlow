@@ -11,7 +11,7 @@
     using Interfaces;
     using Pageing;
 
-    public class VirtualizingObservableCollection<T> : IEnumerable, IEnumerable<T>, ICollection, ICollection<T>, IList,
+    public class VirtualizingObservableCollection<T> : IEnumerable, IEnumerable<T>, ICollection, ICollection<T>, IList, IReadOnlyList<T>, IReadOnlyObservableCollection<T>,
         IList<T>, IObservableCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged where T : class
     {
         IEnumerator IEnumerable.GetEnumerator()
