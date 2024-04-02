@@ -297,6 +297,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
         if (item != null)
         {
+            var completionSource = new TaskCompletionSource<bool>();
+            
             await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
             {
                 if (result is INeedsInitializationAsync toInitialize)
@@ -305,7 +307,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
                 }
 
                 result = await Materialize(item);
+                
+                completionSource.SetResult(true);
             }));
+
+            await completionSource.Task;
         }
 
         return result;
