@@ -1042,7 +1042,7 @@
             pageOffset = (page - _basePage) * PageSize + (from d in _deltas.Values
                              where d.Page < page
                              select d.Delta).Sum();
-            pageSize = PageSize;
+            pageSize = Math.Min(this.PageSize, this.GetCount(false) - pageOffset);
             if (delta != null)
             {
                 pageSize += delta.Delta;
