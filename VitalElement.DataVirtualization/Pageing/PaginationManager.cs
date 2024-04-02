@@ -957,11 +957,6 @@
 
             Interlocked.Increment(ref _localCount);
 
-            if (IsAsync)
-            {
-                var test = GetAt(index, this);
-            }
-
             var edit = GetProviderAsEditable();
             if (edit != null && !isAlreadyInSourceCollection)
             {
@@ -1190,11 +1185,6 @@
                 }
             }
 
-            if (IsAsync)
-            {
-                var test = GetAt(index, this);
-            }
-
             var edit = GetProviderAsEditable();
             if (edit != null)
             {
@@ -1329,11 +1319,6 @@
                     _deltas.Remove(page);
                     _basePage++;
                 }
-            }
-
-            if (IsAsync)
-            {
-                var test = GetAt(index, this);
             }
 
             if (Provider is IEditableProviderIndexBased<T> editableProvider)
