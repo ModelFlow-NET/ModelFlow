@@ -134,7 +134,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <param name="item">The ViewModel that was created.</param>
     protected virtual void OnMaterialized(TViewModel item)
     {
-        if (_autoSyncEnabled && item is IAutoSynchronize vm)
+        if (_autoSyncEnabled && item is IAutoSynchronize { IsManaged: false } vm)
         {
             this.AutoManage(vm);
         }

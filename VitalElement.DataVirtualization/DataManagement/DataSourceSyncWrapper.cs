@@ -51,8 +51,11 @@ public static class DataSourceSyncManager
             
             _propertyChangedSubject = new Subject<Unit>();
 
+            var uiThreadScheduler = VirtualizationManager.UiThreadScheduler ?? Scheduler.CurrentThread;
+            
             _propertyChangedSubject
-                .Throttle(TimeSpan.FromMilliseconds(400), Scheduler.CurrentThread)
+                .Throttle(TimeSpan.FromMilliseconds(400))
+                .ObserveOn(uiThreadScheduler)
                 .Do(OnUpdate)
                 .Subscribe()
                 .DisposeWith(_subscriptions);

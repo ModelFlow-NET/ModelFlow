@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reactive.Concurrency;
     using System.Threading.Tasks;
     using Actions;
     using Interfaces;
@@ -20,6 +21,8 @@
         public static VirtualizationManager Instance { get; } = new VirtualizationManager();
 
         public static bool IsInitialized { get; private set; }
+        
+        public static IScheduler? UiThreadScheduler { get; set; }
 
         public Func<Action, Task> UiThreadExcecuteAction
         {
