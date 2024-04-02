@@ -158,6 +158,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             {
                 // to do, maintain a dictionary, so we dont get duplicates when retrieved from source.
                 _collection.Add(viewModel);
+                
+                OnMaterialized(viewModel);
             }
             
             if (DataSourceCallbacks is { })
