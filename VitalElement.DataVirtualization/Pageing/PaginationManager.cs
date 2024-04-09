@@ -217,6 +217,7 @@
             if (count < 0)
             {
                 _hasGotCount = false;
+                LocalCount = 0;
             }
             else
             {
