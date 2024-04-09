@@ -1054,12 +1054,9 @@
             return newPage;
         }
 
-        private static int gettingCount = 0;
-
         private async Task DoRealPageGet(object voc, ISourcePage<T> page, int pageOffset, int index,
             CancellationTokenSource cts)
         {
-            Console.WriteLine($"Start Getting: {++gettingCount}");
             var realVoc = (VirtualizingObservableCollection<T>) voc;
             var listOfReplaces = new List<PlaceholderReplaceWA<T>>();
 
@@ -1116,7 +1113,6 @@
             }
 
             RemovePageRequest(page.Page);
-            Console.WriteLine($"End Getting: {--gettingCount}");
         }
 
         protected bool IsPageWired(int page)
