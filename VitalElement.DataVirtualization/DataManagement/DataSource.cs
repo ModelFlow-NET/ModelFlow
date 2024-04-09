@@ -158,8 +158,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             {
                 // to do, maintain a dictionary, so we dont get duplicates when retrieved from source.
                 _collection.Add(viewModel);
-                
-                OnMaterialized(viewModel);
+
+                await ProcessMaterializedItem(viewModel);
             }
             
             if (DataSourceCallbacks is { })
@@ -321,14 +321,19 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     {
         var result = _selector(item);
 
-        if (result is INeedsInitializationAsync toInitialize)
+        await ProcessMaterializedItem(result);
+
+        return result;
+    }
+
+    private async Task ProcessMaterializedItem(TViewModel viewModel)
+    {
+        if (viewModel is INeedsInitializationAsync toInitialize)
         {
             await toInitialize.InitializeAsync();
         }
 
-        OnMaterialized(result);
-
-        return result;
+        OnMaterialized(viewModel);
     }
 
     async Task<IEnumerable<TViewModel>> IPagedSourceProviderAsync<TViewModel>.GetItemsAtAsync(int offset, int count)
