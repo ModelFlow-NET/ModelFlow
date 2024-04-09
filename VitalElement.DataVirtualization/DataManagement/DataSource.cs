@@ -140,6 +140,22 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         }
     }
     
+    /// <summary>
+    /// Triggers a request of the first page. This is intended to be used to allow combobox controls to work where your data source is typically smaller
+    /// than a page size. If your datasource is larger than a page, then you may need to use a more suitable control that doesnt rely on knowing all the indexes
+    /// to manage selection. 
+    /// </summary>
+    public async Task RequestFirstPage()
+    {
+        if (Collection is VirtualizingObservableCollection<TViewModel> col && col.Provider is PaginationManager<TViewModel> pgr)
+        {
+            // Trigger the first page to be retrieved.
+            await Task.Run(() => pgr.GetAt(0, col));
+            // Calls after this called from the ui thread will have the first page loaded.
+            // Because GetAt schedules the actual page request on the ui thread.
+        }
+    }
+    
     public async Task<bool> CreateAsync(TViewModel viewModel)
     {
         try
