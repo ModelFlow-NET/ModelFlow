@@ -1,6 +1,8 @@
 ﻿namespace VitalElement.DataVirtualization.Actions
 {
     using System;
+    using DataManagement;
+    using Pageing;
 
     public class PlaceholderReplaceWA<T> : BaseActionVirtualization where T : class
     {
@@ -23,9 +25,16 @@
         {
             var voc = (VirtualizingObservableCollection<T>) _voc.Target;
 
-            if (voc != null && _voc.IsAlive)
+            if (voc.Provider is PaginationManager<T> paginationManager && _newValue is IDataItem)
             {
-                voc.ReplaceAt(_index, _oldValue, _newValue, null);
+                paginationManager.ProviderAsync.Replace(_oldValue, _newValue);
+            }
+            else
+            {
+                if (voc != null && _voc.IsAlive)
+                {
+                    voc.ReplaceAt(_index, _oldValue, _newValue, null);
+                }
             }
         }
     }

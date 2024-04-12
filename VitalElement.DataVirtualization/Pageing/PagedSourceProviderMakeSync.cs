@@ -97,6 +97,11 @@
             return Task.Run(() => IndexOfAsync(item)).GetAwaiter().GetResult();
         }
 
+        public void Replace(T old, T newItem)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<bool> ContainsAsync(T item)
         {
             return FuncContainsAsync?.Invoke(item);

@@ -6,6 +6,7 @@
     using Avalonia.Controls.Models.TreeDataGrid;
     using ViewModels;
     using VitalElement.DataVirtualization;
+    using VitalElement.DataVirtualization.DataManagement;
     using VitalElement.DataVirtualization.Pageing;
 
 
@@ -17,17 +18,17 @@
 
             Items = dataSource.Collection;
 
-            var source = new FlatTreeDataGridSource<RemoteOrDbDataItem>(dataSource.Collection);
+            var source = new FlatTreeDataGridSource<DataItem<RemoteOrDbDataItem>>(dataSource.Collection);
             
-            source.Columns.Add(new TextColumn<RemoteOrDbDataItem, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Name, options: new TextColumnOptions<RemoteOrDbDataItem>
+            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Item.Name, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
             {
                 CanUserSortColumn = false
             }));
-            source.Columns.Add(new TextColumn<RemoteOrDbDataItem, string>("String 1", x => x.Str1, options: new TextColumnOptions<RemoteOrDbDataItem>
+            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>("String 1", x => x.Item.Str1, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
             {
                 CanUserSortColumn = false
             }));
-            source.Columns.Add(new TextColumn<RemoteOrDbDataItem, string>("String 2", x => x.Str2, options: new TextColumnOptions<RemoteOrDbDataItem>
+            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>("String 2", x => x.Item.Str2, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
             {
                 CanUserSortColumn = false
             }));
@@ -35,7 +36,7 @@
             ItemSource = source;
         }
 
-        public IReadOnlyCollection<RemoteOrDbDataItem> Items { get; }
+        public IReadOnlyCollection<DataItem<RemoteOrDbDataItem>> Items { get; }
         
         public ITreeDataGridSource ItemSource { get; }
 

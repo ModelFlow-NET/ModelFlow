@@ -77,8 +77,13 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
         return new RemoteOrDbDataItem {Name = "Waiting [" + page + "/" + offset + "]"};
     }
 
-    protected override Task<int> IndexOfAsync(RemoteOrDbDataItem item)
+    protected override bool ModelsEqual(RemoteOrDbDataItem a, RemoteOrDbDataItem b)
     {
-        return Task.FromResult(-1);
+        return ReferenceEquals(a, b);
+    }
+
+    protected override RemoteOrDbDataItem? GetModelForViewModel(RemoteOrDbDataItem viewModel)
+    {
+        return viewModel;
     }
 }

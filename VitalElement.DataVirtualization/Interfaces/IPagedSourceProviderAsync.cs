@@ -6,6 +6,8 @@
 
     public interface IPagedSourceProviderAsync<T> :  IBaseSourceProvider<T>
     {
+        void Replace(T old, T newItem);
+        
         Task<bool> ContainsAsync(T item);
 
         Task<int> GetCountAsync();
