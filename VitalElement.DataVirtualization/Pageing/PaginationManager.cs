@@ -335,11 +335,16 @@
                 }
             }
 
-            return !IsAsync
-                ? Provider.IndexOf(item)
-                : ProviderAsync.IndexOfAsync(item).GetAwaiter().GetResult();
+            if (!IsAsync)
+            {
+                return Provider.IndexOf(item);
+            }
+            else
+            {
+                var result = Task.Run(async () => await ProviderAsync.IndexOfAsync(item)).GetAwaiter().GetResult();
 
-            //return this.ProviderAsync.IndexOf(item);
+                return result;
+            }
         }
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;

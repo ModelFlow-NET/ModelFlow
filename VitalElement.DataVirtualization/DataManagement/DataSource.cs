@@ -125,7 +125,60 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <returns></returns>
     protected abstract TViewModel GetPlaceHolder(int index, int page, int offset);
 
-    protected abstract Task<int> IndexOfAsync(TViewModel item);
+    protected abstract TModel? GetModelForViewModel(TViewModel viewModel);
+
+    protected abstract bool ModelsEqual(TModel a, TModel b);
+
+    protected virtual async Task<int> IndexOfAsync(TViewModel item,
+        Func<IQueryable<TModel>, IQueryable<TModel>> filterSortQuery)
+    {
+        var model = GetModelForViewModel(item);
+
+        if (model is null)
+        {
+            return -1;
+        }
+
+        var count = await GetCountAsync(BuildFilterQuery); // use last count to reduce calls.
+        
+        // Initialize start and end indices for binary search
+        int start = 0;
+        int end = count - 1;
+
+        while (start <= end)
+        {
+            int mid = start + ((end - start) / 2);
+            
+            var sample = (await GetItemsAtAsync(mid, 1, filterSortQuery)).FirstOrDefault();
+
+            if (ModelsEqual(sample, model))
+            {
+                // contains... index.
+                return mid;
+            }
+            else
+            {
+                var compareItems = new[] { model, sample };
+
+                var query = BuildSortQuery(compareItems.AsQueryable());
+
+                var sorted = query.ToList();
+
+                if (ModelsEqual(sorted[0], model))
+                {
+                    // Item is lower, search in the left half
+                    end = mid - 1;
+                }
+                else
+                {
+                    // Item is higher, search in the right half
+                    start = mid + 1;
+                }
+            }
+        }
+
+        return -1;
+    }
 
     /// <summary>
     /// This will be called when a ViewModel is materialized. It is called AFTER any async initialisation has occurred.
@@ -173,7 +226,16 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             if (isSuccess)
             {
                 // to do, maintain a dictionary, so we dont get duplicates when retrieved from source.
-                _collection.Add(viewModel);
+                var index = await IndexOfAsync(viewModel);
+
+                if (index >= 0)
+                {
+                    _collection.Insert(index, viewModel);
+                }
+                else
+                {
+                    _collection.Add(viewModel);   
+                }
 
                 await ProcessMaterializedItem(viewModel);
             }
@@ -378,7 +440,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     TViewModel IPagedSourceProviderAsync<TViewModel>.GetPlaceHolder(int index, int page, int offset) =>
         GetPlaceHolder(index, page, offset);
 
-    Task<int> IPagedSourceProviderAsync<TViewModel>.IndexOfAsync(TViewModel item) => IndexOfAsync(item);
+    
+    public async Task<int> IndexOfAsync(TViewModel item)
+    {
+        return await IndexOfAsync(item, BuildFilterSortQuery);
+    }
 
     private IQueryable<TModel> AddSorting(IQueryable<TModel> query, ListSortDirection sortDirection,
         string propertyName)
@@ -422,6 +488,24 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         if (_filterQuery is not null)
         {
             queryable = _filterQuery(queryable);
+        }
+
+        return queryable;
+    }
+
+    public IQueryable<TModel> BuildSortQuery(IQueryable<TModel> queryable)
+    {
+        var sorting = SortDescriptionList;
+
+        if (sorting.Any())
+        {
+            foreach (var sort in sorting)
+            {
+                if (sort.Direction != null)
+                {
+                    queryable = AddSorting(queryable, sort.Direction.Value, sort.PropertyName);
+                }
+            }
         }
 
         return queryable;
