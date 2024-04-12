@@ -36,11 +36,6 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         SortDescriptionList.CollectionChanged += (_, _) => { Invalidate(); };
     }
 
-    void IPagedSourceProviderAsync<DataItem<TViewModel>>.Replace (DataItem<TViewModel> old, DataItem<TViewModel> newItem)
-    {
-        old.Item = newItem.Item;
-    }
-
     /// <summary>
     /// Indicates that the count property has been accessed at least once.
     /// This means that a DataGrid or List has connected to the datasource.
@@ -128,7 +123,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <param name="page">The page index of the item.</param>
     /// <param name="offset">The offset of the item.</param>
     /// <returns></returns>
-    protected abstract TViewModel GetPlaceHolder(int index, int page, int offset);
+    protected abstract TViewModel? GetPlaceHolder(int index, int page, int offset);
 
     protected abstract TModel? GetModelForViewModel(TViewModel viewModel);
 
@@ -198,37 +193,6 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         if (_autoSyncEnabled && item is IAutoSynchronize { IsManaged: false } vm)
         {
             this.AutoManage(vm);
-        }
-    }
-    
-    /// <summary>
-    /// Triggers a request of the first page. This is intended to be used to allow combobox controls to work where your data source is typically smaller
-    /// than a page size. If your datasource is larger than a page, then you may need to use a more suitable control that doesnt rely on knowing all the indexes
-    /// to manage selection. 
-    /// </summary>
-    public async Task RequestFirstPage()
-    {
-        if (Collection is VirtualizingObservableCollection<TViewModel> col && col.Provider is PaginationManager<TViewModel> pgr)
-        {
-            // Trigger the first page to be retrieved.
-            await Task.Run(async () =>
-            {
-                var count = pgr.Count;
-
-                while (!IsInitialised)
-                {
-                    await Task.Delay(100);
-                }
-
-                count = pgr.Count;
-
-                if (count > 0)
-                {
-                    pgr.GetAt(0, col);
-                }
-            });
-            // Calls after this called from the ui thread will have the first page loaded.
-            // Because GetAt schedules the actual page request on the ui thread.
         }
     }
     

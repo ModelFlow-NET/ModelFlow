@@ -2,8 +2,9 @@
 {
     using System;
     using System.Collections.Specialized;
+    using DataManagement;
 
-    public class ExecuteResetWA<T> : BaseActionVirtualization where T : class
+    public class ExecuteResetWA<T> : BaseActionVirtualization where T : class, IDataItem
     {
         readonly WeakReference _voc;
 
