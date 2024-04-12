@@ -332,7 +332,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     }
     
 
-    void IBaseSourceProvider<DataItem<TViewModel>>.OnReset(int count)
+    void IBaseSourceProvider.OnReset(int count)
     {
         OnReset(count);
     }

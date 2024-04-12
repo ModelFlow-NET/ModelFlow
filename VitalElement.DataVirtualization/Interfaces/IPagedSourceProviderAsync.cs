@@ -4,7 +4,7 @@
     using System.Threading.Tasks;
     using Pageing;
 
-    public interface IPagedSourceProviderAsync<T> :  IBaseSourceProvider<T>
+    public interface IPagedSourceProviderAsync<T> :  IBaseSourceProvider
     {
         Task<bool> ContainsAsync(T item);
 
