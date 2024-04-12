@@ -203,7 +203,22 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         if (Collection is VirtualizingObservableCollection<TViewModel> col && col.Provider is PaginationManager<TViewModel> pgr)
         {
             // Trigger the first page to be retrieved.
-            await Task.Run(() => pgr.GetAt(0, col));
+            await Task.Run(async () =>
+            {
+                var count = pgr.Count;
+
+                while (!IsInitialised)
+                {
+                    await Task.Delay(100);
+                }
+
+                count = pgr.Count;
+
+                if (count > 0)
+                {
+                    pgr.GetAt(0, col);
+                }
+            });
             // Calls after this called from the ui thread will have the first page loaded.
             // Because GetAt schedules the actual page request on the ui thread.
         }
