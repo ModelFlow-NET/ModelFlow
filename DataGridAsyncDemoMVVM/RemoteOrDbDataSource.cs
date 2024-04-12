@@ -78,9 +78,9 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
         return await _remoteDatas.GetRowsAsync(offset, count, filterSortQuery);
     }
 
-    protected override RemoteOrDbDataItem GetPlaceHolder(int index, int page, int offset)
+    protected override RemoteOrDbDataItem? GetPlaceHolder(int index, int page, int offset)
     {
-        return RemoteOrDbDataItem.Placeholder;// new RemoteOrDbDataItem {Name = "Waiting [" + page + "/" + offset + "]"};
+        return null;// new RemoteOrDbDataItem {Name = "Waiting [" + page + "/" + offset + "]"};
     }
 
     protected override bool ModelsEqual(RemoteOrDbDataItem a, RemoteOrDbDataItem b)

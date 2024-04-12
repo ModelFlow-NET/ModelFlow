@@ -15,20 +15,23 @@
             <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
             <TextBlock Text="{Binding RandomIndex}"/>
         </StackPanel>
-        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
-            <ListBox.ItemTemplate>
+        <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+            <ComboBox.ItemTemplate>
                 <DataTemplate>
-                    <Panel DataContext="{Binding Item}">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="{Binding Id}" />
-                            <TextBlock Text="{Binding Str1}" />
-                            <TextBlock Text="{Binding Str2}" />
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Item.Id}" />
+                            <TextBlock Text="{Binding Item.Str1}" />
+                            <TextBlock Text="{Binding Item.Str2}" />
                         </StackPanel>
-                    </Panel>
-                    
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding IsLoading}" />
+                            <TextBlock Text="{Binding IsInUse}" />
+                        </StackPanel>
+                    </StackPanel>
                 </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
     </DockPanel>
 
 </Window>
