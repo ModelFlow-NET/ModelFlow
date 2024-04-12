@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-internal interface IDataItem { }
+public interface IDataItem
+{
+    object? Item { get; }
+}
 
 public class DataItem<T> : IDataItem, INotifyPropertyChanged
 {
@@ -14,6 +17,8 @@ public class DataItem<T> : IDataItem, INotifyPropertyChanged
     {
         _item = item;
     }
+
+    object? IDataItem.Item => Item;
 
     public T Item
     {
