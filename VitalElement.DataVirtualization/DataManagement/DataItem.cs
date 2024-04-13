@@ -1,35 +1,39 @@
 namespace VitalElement.DataVirtualization.DataManagement;
 
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 public interface IDataItem
 {
-    object Item { get; internal set; }
+    object? Item { get; internal set; }
     
     bool IsLoading { get; internal set; }
 }
 
-public interface IDataItem<T> : IDataItem
+public interface IDataItem<T> : IDataItem where T : class
 {
-    public T Item { get; }
+    public new T? Item { get; }
 }
 
 public static class DataItem
 {
-    public static DataItem<T> Create<T>(T item)
+    public static IDataItem<T> Create<T>(T item) where T : class
     {
         return new DataItem<T>(item, false);
     }
+    
+    internal static IDataItem<T> Create<T>(T? item, bool isPlaceholder) where T : class
+    {
+        return new DataItem<T>(item, isPlaceholder);
+    }
 }
 
-public class DataItem<T> : IDataItem<T>, IDataItem, INotifyPropertyChanged
+internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : class
 {
-    private T _item;
+    private T? _item;
     private bool _isLoading;
 
-    internal DataItem(T item, bool isPlaceholder)
+    internal DataItem(T? item, bool isPlaceholder)
     {
         _item = item;
         _isLoading = isPlaceholder;
@@ -52,13 +56,13 @@ public class DataItem<T> : IDataItem<T>, IDataItem, INotifyPropertyChanged
         set => IsLoading = value;
     }
 
-    object IDataItem.Item
+    object? IDataItem.Item
     {
         get => Item;
-        set => Item = (T)value;
+        set => Item = (T?)value;
     }
 
-    public T Item
+    public T? Item
     {
         get => _item;
         private set
