@@ -41,13 +41,13 @@ public static class Extensions
         return memberExpression.Member.Name;
     }
     
-    public static Task<T?> GetRowAsync<T>(this IQueryable<T> table, Expression<Func<T, bool>> predicate)
+    internal static Task<T?> GetRowAsync<T>(this IQueryable<T> table, Expression<Func<T, bool>> predicate)
         where T : class
     {
         return Task.Run(() => table.FirstOrDefault(predicate))!;
     }
 
-    public static Task<int> GetRowCountAsync<T>(this IQueryable<T> table, Func<IQueryable<T>, IQueryable<T>>? query = null)
+    internal static Task<int> GetRowCountAsync<T>(this IQueryable<T> table, Func<IQueryable<T>, IQueryable<T>>? query = null)
         where T : class
     {
         IQueryable<T> rows = table;
@@ -60,7 +60,7 @@ public static class Extensions
         return Task.Run(() => rows.Count());
     }
 
-    public static Task<IEnumerable<T>> GetRowsAsync<T>(this IQueryable<T> table, int offset, int count, Func<IQueryable<T>, IQueryable<T>>? query = null)
+    internal static Task<IEnumerable<T>> GetRowsAsync<T>(this IQueryable<T> table, int offset, int count, Func<IQueryable<T>, IQueryable<T>>? query = null)
         where T : class
     {
         IQueryable<T> rows = table;

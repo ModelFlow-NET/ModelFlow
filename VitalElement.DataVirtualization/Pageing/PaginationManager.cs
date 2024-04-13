@@ -12,7 +12,7 @@
     using DataManagement;
     using Interfaces;
 
-    public class PaginationManager<T> : IItemSourceProvider<T>, INotifyImmediately, IEditableProvider<T>,
+    internal class PaginationManager<T> : IItemSourceProvider<T>, INotifyImmediately, IEditableProvider<T>,
         IEditableProviderIndexBased<T>, IEditableProviderItemBased<T>, IReclaimableService,
         IAsyncResetProvider, IProviderPreReset, INotifyCountChanged, INotifyCollectionChanged,
         ICollection where T : class, IDataItem

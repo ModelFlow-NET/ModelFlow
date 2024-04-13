@@ -16,6 +16,7 @@
         public void Execute()
         {
             _oldValue.Item = _newValue.Item;
+            _oldValue.IsLoading = false;
         }
     }
 }

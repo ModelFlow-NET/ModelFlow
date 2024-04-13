@@ -7,16 +7,32 @@ using System.Runtime.CompilerServices;
 public interface IDataItem
 {
     object Item { get; internal set; }
+    
+    bool IsLoading { get; internal set; }
 }
 
-public class DataItem<T> : IDataItem, INotifyPropertyChanged where T : class
+public interface IDataItem<T> : IDataItem
+{
+    public T Item { get; }
+}
+
+public static class DataItem
+{
+    public static DataItem<T> Create<T>(T item)
+    {
+        return new DataItem<T>(item, false);
+    }
+}
+
+public class DataItem<T> : IDataItem<T>, IDataItem, INotifyPropertyChanged
 {
     private T _item;
-    private bool _isLoading = true;
+    private bool _isLoading;
 
-    public DataItem(T item)
+    internal DataItem(T item, bool isPlaceholder)
     {
         _item = item;
+        _isLoading = isPlaceholder;
     }
 
     public bool IsLoading
@@ -30,14 +46,16 @@ public class DataItem<T> : IDataItem, INotifyPropertyChanged where T : class
         }
     }
 
+    bool IDataItem.IsLoading
+    {
+        get => IsLoading;
+        set => IsLoading = value;
+    }
+
     object IDataItem.Item
     {
         get => Item;
-        set
-        {
-            IsLoading = false;
-            Item = (T)value;
-        }
+        set => Item = (T)value;
     }
 
     public T Item
@@ -50,48 +68,9 @@ public class DataItem<T> : IDataItem, INotifyPropertyChanged where T : class
         }
     }
 
-    public bool IsInUse
-    {
-        get { return PropertyChanged != null; }
-    }
-
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-}
-
-public class DataItem1<T> : IDataItem, INotifyPropertyChanged
-{
-    private T _item;
-
-    public DataItem1(T item)
-    {
-        _item = item;
-    }
-
-    object IDataItem.Item
-    {
-        get => Item;
-        set => Item = (T)value;
-    }
-
-    public T Item
-    {
-        get => _item;
-        set
-        {
-            if (EqualityComparer<T>.Default.Equals(value, _item)) return;
-            _item = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

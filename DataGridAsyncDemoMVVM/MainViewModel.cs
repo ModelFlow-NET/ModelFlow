@@ -53,12 +53,12 @@
 
                 RandomIndex = index;
 
-                SelectedItem = new DataItem<RemoteOrDbDataItem>(dataSource.Emulation.Items[index]);
+                SelectedItem = DataItem.Create(dataSource.Emulation.Items[index]);
             });
             
             Dispatcher.UIThread.Post(async () =>
             {
-                SelectedItem = new DataItem<RemoteOrDbDataItem>(dataSource.Emulation.Items[500]); 
+                SelectedItem = DataItem.Create(dataSource.Emulation.Items[500]); 
             });
         }
 

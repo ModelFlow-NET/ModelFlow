@@ -421,11 +421,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
         await completionSource.Task;
 
-        return result.Select(x => new DataItem<TViewModel>(x));
+        return result.Select(x => new DataItem<TViewModel>(x, false));
     }
 
     DataItem<TViewModel> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetPlaceHolder(int index, int page, int offset) =>
-        new DataItem<TViewModel>(GetPlaceHolder(index, page, offset));
+        new DataItem<TViewModel>(GetPlaceHolder(index, page, offset), true);
 
     
     public async Task<int> IndexOfAsync(TViewModel item)

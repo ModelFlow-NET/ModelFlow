@@ -84,7 +84,7 @@
         ///     Initializes a new instance of the <see cref="VirtualizingObservableCollection{T}" /> class.
         /// </summary>
         /// <param name="provider">The provider.</param>
-        public VirtualizingObservableCollection(IItemSourceProvider<T> provider) : this()
+        internal VirtualizingObservableCollection(IItemSourceProvider<T> provider) : this()
         {
             Provider = provider;
         }
@@ -512,7 +512,7 @@
         /// <value>
         ///     The provider.
         /// </value>
-        public IItemSourceProvider<T> Provider
+        internal IItemSourceProvider<T> Provider
         {
             get => _provider;
             set

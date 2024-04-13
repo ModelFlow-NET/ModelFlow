@@ -80,7 +80,7 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
 
     protected override RemoteOrDbDataItem? GetPlaceHolder(int index, int page, int offset)
     {
-        return null;// new RemoteOrDbDataItem {Name = "Waiting [" + page + "/" + offset + "]"};
+        return new RemoteOrDbDataItem(-1, "", "loading...", "", index, offset);
     }
 
     protected override bool ModelsEqual(RemoteOrDbDataItem a, RemoteOrDbDataItem b)

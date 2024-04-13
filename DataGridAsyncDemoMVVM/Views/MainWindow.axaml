@@ -26,7 +26,6 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding IsLoading}" />
-                            <TextBlock Text="{Binding IsInUse}" />
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
