@@ -16,7 +16,7 @@
 
         private bool _processing;
 
-        private Func<Action, Task> _uiThreadExcecuteAction;
+        private Func<Action, Task>? _uiThreadExcecuteAction;
 
         public static VirtualizationManager Instance { get; } = new VirtualizationManager();
 
@@ -24,7 +24,7 @@
         
         public static IScheduler? UiThreadScheduler { get; set; }
 
-        public Func<Action, Task> UiThreadExcecuteAction
+        public Func<Action, Task>? UiThreadExcecuteAction
         {
             get => _uiThreadExcecuteAction;
             set
