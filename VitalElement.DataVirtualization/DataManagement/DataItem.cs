@@ -5,14 +5,14 @@ using System.Runtime.CompilerServices;
 
 public interface IDataItem
 {
-    object? Item { get; internal set; }
+    object Item { get; internal set; }
     
     bool IsLoading { get; internal set; }
 }
 
 public interface IDataItem<T> : IDataItem where T : class
 {
-    public new T? Item { get; }
+    public new T Item { get; }
 }
 
 public static class DataItem
@@ -22,7 +22,7 @@ public static class DataItem
         return new DataItem<T>(item, false);
     }
     
-    internal static IDataItem<T> Create<T>(T? item, bool isPlaceholder) where T : class
+    internal static IDataItem<T> Create<T>(T item, bool isPlaceholder) where T : class
     {
         return new DataItem<T>(item, isPlaceholder);
     }
@@ -30,10 +30,10 @@ public static class DataItem
 
 internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : class
 {
-    private T? _item;
+    private T _item;
     private bool _isLoading;
 
-    internal DataItem(T? item, bool isPlaceholder)
+    internal DataItem(T item, bool isPlaceholder)
     {
         _item = item;
         _isLoading = isPlaceholder;
@@ -56,13 +56,13 @@ internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : clas
         set => IsLoading = value;
     }
 
-    object? IDataItem.Item
+    object IDataItem.Item
     {
         get => Item;
-        set => Item = (T?)value;
+        set => Item = (T)value;
     }
 
-    public T? Item
+    public T Item
     {
         get => _item;
         private set

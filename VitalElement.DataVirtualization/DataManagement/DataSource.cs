@@ -130,14 +130,12 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <summary>
     /// Gets a placeholder to represent the viewmodel whilst data is yet to be retrieved.
     /// It is recommended to return a singleton here, to save memory usage.
-    /// This is not strictly necessary as each item will be wrapped with a <see cref="IDataItem{T}"/>
-    /// These serve the purpose of placeholders.
     /// </summary>
     /// <param name="index">The index of the item.</param>
     /// <param name="page">The page index of the item.</param>
     /// <param name="offset">The offset of the item.</param>
     /// <returns>Returns a placeholder or null if not needed.</returns>
-    protected abstract TViewModel? GetPlaceHolder(int index, int page, int offset);
+    protected abstract TViewModel GetPlaceHolder(int index, int page, int offset);
 
     /// <summary>
     /// Given an instance of a viewmodel, retrieve the model.
@@ -549,12 +547,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
     Task<int> IPagedSourceProviderAsync<IDataItem<TViewModel>>.IndexOfAsync(IDataItem<TViewModel> item)
     {
-        if (item.Item is { })
-        {
-            return IndexOfAsync(item.Item);
-        }
-
-        return Task.FromResult(-1);
+        return IndexOfAsync(item.Item);
     }
 
     void IBaseSourceProvider.OnReset(int count)
@@ -592,12 +585,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
     Task<bool> IPagedSourceProviderAsync<IDataItem<TViewModel>>.ContainsAsync(IDataItem<TViewModel> item)
     {
-        if (item.Item is { })
-        {
-            return ContainsAsync(item.Item);
-        }
-
-        return Task.FromResult(false);
+        return ContainsAsync(item.Item);
     }
 
     async Task<int> IPagedSourceProviderAsync<IDataItem<TViewModel>>.GetCountAsync()
