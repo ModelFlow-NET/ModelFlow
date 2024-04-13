@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
 
-    public interface IItemSourceProviderAsync<T> : IBaseSourceProvider
+    internal interface IItemSourceProviderAsync<T> : IBaseSourceProvider
     {
         Task<int> Count { get; }
         Task<T> GetAt(int index, object voc);

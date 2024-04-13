@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using Pageing;
 
-    public interface IPagedSourceProvider<T> : IBaseSourceProvider
+    internal interface IPagedSourceProvider<T> : IBaseSourceProvider
     {
         int Count { get; }
         bool Contains(T item);

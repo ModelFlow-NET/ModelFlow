@@ -1,6 +1,6 @@
 namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface ISynchronized
+    internal interface ISynchronized
     {
         bool IsSynchronized { get; }
         
