@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using Interfaces;
 
-    public class BasePagedSourceProvider<T> : IPagedSourceProvider<T>
+    internal class BasePagedSourceProvider<T> : IPagedSourceProvider<T>
     {
         public BasePagedSourceProvider()
         {

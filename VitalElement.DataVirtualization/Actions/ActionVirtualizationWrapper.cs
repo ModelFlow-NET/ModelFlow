@@ -5,7 +5,7 @@
     /// <summary>
     ///     This is a VirtualAction that wraps an Action, optionally with a repeating schedule.
     /// </summary>
-    public class ActionVirtualizationWrapper : BaseRepeatableActionVirtualization
+    internal class ActionVirtualizationWrapper : BaseRepeatableActionVirtualization
     {
         private readonly Action _action;
 

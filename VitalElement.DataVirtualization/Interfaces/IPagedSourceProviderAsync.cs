@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Pageing;
 
     internal interface IPagedSourceProviderAsync<T> :  IBaseSourceProvider
     {

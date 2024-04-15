@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
 
-    public interface IAsyncResetProvider
+    internal interface IAsyncResetProvider
     {
         Task<int> GetCountAsync();
     }

@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Actions
 {
-    public enum VirtualActionThreadModelEnum
+    internal enum VirtualActionThreadModelEnum
     {
         UseUIThread,
         Background

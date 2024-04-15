@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using Interfaces;
 
-    public class SourcePage<T> : ISourcePage<T>
+    internal class SourcePage<T> : ISourcePage<T>
     {
         private List<int> _replaceNeededList;
         protected List<T> Items;

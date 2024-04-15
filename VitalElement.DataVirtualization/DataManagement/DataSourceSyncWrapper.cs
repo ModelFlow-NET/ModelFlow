@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Extensions;
 
-public static class DataSourceSyncManager
+internal static class DataSourceSyncManager
 {
     public static IDisposable AutoManage<TViewModel, TModel>(
         this DataSource<TViewModel, TModel> dataSource,

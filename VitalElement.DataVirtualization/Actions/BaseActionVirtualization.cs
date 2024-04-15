@@ -5,7 +5,7 @@
     /// <summary>
     ///     Base Class that does an action on the dispatcher thread. Simply implement the DoAction method.
     /// </summary>
-    public abstract class BaseActionVirtualization : IVirtualizationAction
+    internal abstract class BaseActionVirtualization : IVirtualizationAction
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="BaseActionVirtualization" /> class.

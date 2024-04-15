@@ -2,7 +2,7 @@
 {
     using DataManagement;
 
-    public struct PlaceholderReplaceWA
+    internal struct PlaceholderReplaceWA
     {
         private IDataItem _newValue;
         private IDataItem _oldValue;

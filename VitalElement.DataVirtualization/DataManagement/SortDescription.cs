@@ -1,8 +1,6 @@
 namespace VitalElement.DataVirtualization.DataManagement
 {
-    using System;
     using System.ComponentModel;
-    using System.Linq.Expressions;
 
     public class SortDescription : IFilterOrderDescription
     {

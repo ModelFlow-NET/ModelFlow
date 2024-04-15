@@ -1,7 +1,7 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface INotifyImmediately
+    internal interface INotifyImmediately
     {
-        bool IsNotifyImmidiately { get; set; }
+        bool IsNotifyImmediately { get; set; }
     }
 }

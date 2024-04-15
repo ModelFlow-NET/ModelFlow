@@ -355,15 +355,15 @@
         /// </summary>
         public event OnCountChanged CountChanged;
 
-        public bool IsNotifyImmidiately
+        public bool IsNotifyImmediately
         {
             get => Provider is INotifyImmediately iNotifyImmediatelyProvider &&
-                   iNotifyImmediatelyProvider.IsNotifyImmidiately;
+                   iNotifyImmediatelyProvider.IsNotifyImmediately;
             set
             {
                 if (Provider is INotifyImmediately iNotifyImmediatelyProvider)
                 {
-                    iNotifyImmediatelyProvider.IsNotifyImmidiately = value;
+                    iNotifyImmediatelyProvider.IsNotifyImmediately = value;
                 }
             }
         }

@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface IRepeatingVirtualizationAction
+    internal interface IRepeatingVirtualizationAction
     {
         bool IsDueToRun();
         bool KeepInActionsList();

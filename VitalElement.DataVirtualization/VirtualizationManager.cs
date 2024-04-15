@@ -34,7 +34,7 @@
             }
         }
 
-        public void AddAction(IVirtualizationAction action)
+        internal void AddAction(IVirtualizationAction action)
         {
             lock (_actionLock)
             {
@@ -42,7 +42,7 @@
             }
         }
 
-        public void AddAction(Action action)
+        internal void AddAction(Action action)
         {
             AddAction(new ActionVirtualizationWrapper(action));
         }
@@ -104,7 +104,7 @@
             _processing = false;
         }
 
-        public void RunOnUi(IVirtualizationAction action)
+        private void RunOnUi(IVirtualizationAction action)
         {
             if (UiThreadExcecuteAction == null) // PLV
                 throw new Exception(
@@ -112,12 +112,12 @@
             UiThreadExcecuteAction.Invoke(action.DoAction);
         }
 
-        public void RunOnUi(Action action)
+        internal void RunOnUi(Action action)
         {
             RunOnUi(new ActionVirtualizationWrapper(action));
         }
         
-        public async Task RunOnUiAsync(IVirtualizationAction action)
+        internal async Task RunOnUiAsync(IVirtualizationAction action)
         {
             if (UiThreadExcecuteAction == null) // PLV
                 throw new Exception(

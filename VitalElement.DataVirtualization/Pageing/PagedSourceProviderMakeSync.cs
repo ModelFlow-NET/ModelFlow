@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using Interfaces;
 
-    public class PagedSourceProviderMakeSync<T> : IPagedSourceProviderAsync<T>, IProviderPreReset
+    internal class PagedSourceProviderMakeSync<T> : IPagedSourceProviderAsync<T>, IProviderPreReset
     {
         public PagedSourceProviderMakeSync()
         {

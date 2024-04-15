@@ -2,7 +2,7 @@
 {
     using Actions;
 
-    public interface IVirtualizationAction
+    internal interface IVirtualizationAction
     {
         VirtualActionThreadModelEnum ThreadModel { get; }
 

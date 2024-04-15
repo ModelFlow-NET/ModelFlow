@@ -7,7 +7,7 @@
     ///     Base class there the Action repeats on a periodic basis (the RepeatingSchedule) like BaseActionVirtualization
     ///     simply implement the DoAction method.
     /// </summary>
-    public abstract class BaseRepeatableActionVirtualization : BaseActionVirtualization, IRepeatingVirtualizationAction
+    internal abstract class BaseRepeatableActionVirtualization : BaseActionVirtualization, IRepeatingVirtualizationAction
     {
         protected DateTime LastRun = DateTime.MinValue;
 

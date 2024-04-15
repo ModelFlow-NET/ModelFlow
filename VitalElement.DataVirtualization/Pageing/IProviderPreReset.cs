@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Pageing
 {
-    public interface IProviderPreReset
+    internal interface IProviderPreReset
     {
         void OnBeforeReset();
     }
