@@ -419,6 +419,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <returns>int - the number of rows.</returns>
     public async Task<int> GetCountAsync() => await GetCountAsync(BuildFilterQuery);
 
+    public Task<IEnumerable<TModel>> GetModelsAtAsync(int offset, int count)
+    {
+        return GetItemsAtAsync(offset, count, BuildFilterSortQuery);
+    }
+
     /// <summary>
     /// Get the first viewmodel that matches the predicate.
     /// </summary>
