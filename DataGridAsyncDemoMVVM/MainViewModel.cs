@@ -17,7 +17,7 @@
     public partial class MainViewModel : ViewModelBase
     {
         [ObservableProperty]
-        private IDataItem<RemoteOrDbDataItem>? _selectedItem;
+        private DataItem<RemoteOrDbDataItem>? _selectedItem;
 
         [ObservableProperty]
         private int _randomIndex;
@@ -28,17 +28,17 @@
 
             Items = dataSource.Collection;
 
-            var source = new FlatTreeDataGridSource<IDataItem<RemoteOrDbDataItem>>(dataSource.Collection);
+            var source = new FlatTreeDataGridSource<DataItem<RemoteOrDbDataItem>>(dataSource.Collection);
             
-            source.Columns.Add(new TextColumn<IDataItem<RemoteOrDbDataItem>, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Item.Name, options: new TextColumnOptions<IDataItem<RemoteOrDbDataItem>>
+            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Item.Name, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
             {
                 CanUserSortColumn = false
             }));
-            source.Columns.Add(new TextColumn<IDataItem<RemoteOrDbDataItem>, string>("String 1", x => x.Item.Str1, options: new TextColumnOptions<IDataItem<RemoteOrDbDataItem>>
+            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>("String 1", x => x.Item.Str1, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
             {
                 CanUserSortColumn = false
             }));
-            source.Columns.Add(new TextColumn<IDataItem<RemoteOrDbDataItem>, string>("String 2", x => x.Item.Str2, options: new TextColumnOptions<IDataItem<RemoteOrDbDataItem>>
+            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>("String 2", x => x.Item.Str2, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
             {
                 CanUserSortColumn = false
             }));
@@ -53,16 +53,16 @@
 
                 RandomIndex = index;
 
-                SelectedItem = DataItem.Create(dataSource.Emulation.Items[index]);
+                SelectedItem = dataSource.Emulation.Items[index];
             });
             
             Dispatcher.UIThread.Post(async () =>
             {
-                SelectedItem = DataItem.Create(dataSource.Emulation.Items[500]); 
+                SelectedItem = dataSource.Emulation.Items[500]; 
             });
         }
 
-        public IReadOnlyCollection<IDataItem<RemoteOrDbDataItem>> Items { get; }
+        public IReadOnlyCollection<DataItem<RemoteOrDbDataItem>> Items { get; }
         
         public ITreeDataGridSource ItemSource { get; }
         

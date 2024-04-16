@@ -4,7 +4,7 @@
     using System.Collections.Specialized;
     using DataManagement;
 
-    internal class ExecuteResetWA<T> : BaseActionVirtualization where T : class, IDataItem
+    internal class ExecuteResetWA<T> : BaseActionVirtualization where T : DataItem
     {
         readonly WeakReference _voc;
 

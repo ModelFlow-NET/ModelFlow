@@ -15,11 +15,11 @@ public class DataSource
     public static IDataSourceCallbacks? DataSourceCallbacks;
 }
 
-public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceProviderAsync<IDataItem<TViewModel>>
+public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceProviderAsync<DataItem<TViewModel>>
     where TViewModel : class
 {
     private Func<IQueryable<TModel>, IQueryable<TModel>>? _filterQuery;
-    private readonly VirtualizingObservableCollection<IDataItem<TViewModel>> _collection;
+    private readonly VirtualizingObservableCollection<DataItem<TViewModel>> _collection;
     private readonly Func<TModel, TViewModel> _selector;
     private readonly bool _autoSyncEnabled;
 
@@ -27,8 +27,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     {
         _autoSyncEnabled = autoSync;
         _selector = selector;
-        _collection = new VirtualizingObservableCollection<IDataItem<TViewModel>>(
-            new PaginationManager<IDataItem<TViewModel>>(this, pageSize: pageSize, maxPages: maxPages));
+        _collection = new (
+            new PaginationManager<DataItem<TViewModel>>(this, pageSize: pageSize, maxPages: maxPages));
 
         SortDescriptionList = new SortDescriptionList();
 
@@ -82,7 +82,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// The collection is an VirtualizedObservableCollection meaning that only the items accessed are materialized
     /// via the datasource.
     /// </summary>
-    public IReadOnlyObservableCollection<IDataItem<TViewModel>> Collection => _collection;
+    public IReadOnlyObservableCollection<DataItem<TViewModel>> Collection => _collection;
 
     /// <summary>
     /// A list of sort descriptions that can be changed.
@@ -545,7 +545,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         return queryable;
     }
 
-    Task<int> IPagedSourceProviderAsync<IDataItem<TViewModel>>.IndexOfAsync(IDataItem<TViewModel> item)
+    Task<int> IPagedSourceProviderAsync<DataItem<TViewModel>>.IndexOfAsync(DataItem<TViewModel> item)
     {
         return IndexOfAsync(item.Item);
     }
@@ -555,7 +555,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         OnReset(count);
     }
 
-    async Task<IEnumerable<IDataItem<TViewModel>>> IPagedSourceProviderAsync<IDataItem<TViewModel>>.GetItemsAtAsync(
+    async Task<IEnumerable<DataItem<TViewModel>>> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetItemsAtAsync(
         int offset, int count)
     {
         var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
@@ -579,16 +579,16 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         return result.Select(x => new DataItem<TViewModel>(x, false));
     }
 
-    IDataItem<TViewModel> IPagedSourceProviderAsync<IDataItem<TViewModel>>.
+    DataItem<TViewModel> IPagedSourceProviderAsync<DataItem<TViewModel>>.
         GetPlaceHolder(int index, int page, int offset) =>
         DataItem.Create(GetPlaceHolder(index, page, offset), true);
 
-    Task<bool> IPagedSourceProviderAsync<IDataItem<TViewModel>>.ContainsAsync(IDataItem<TViewModel> item)
+    Task<bool> IPagedSourceProviderAsync<DataItem<TViewModel>>.ContainsAsync(DataItem<TViewModel> item)
     {
         return ContainsAsync(item.Item);
     }
 
-    async Task<int> IPagedSourceProviderAsync<IDataItem<TViewModel>>.GetCountAsync()
+    async Task<int> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetCountAsync()
     {
         var result = await GetCountAsync(BuildFilterQuery);
         IsInitialised = true;

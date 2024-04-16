@@ -3,32 +3,24 @@ namespace VitalElement.DataVirtualization.DataManagement;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-public interface IDataItem
+public abstract class DataItem
 {
-    object Item { get; internal set; }
-    
-    bool IsLoading { get; internal set; }
-}
-
-public interface IDataItem<T> : IDataItem where T : class
-{
-    public new T Item { get; }
-}
-
-public static class DataItem
-{
-    public static IDataItem<T> Create<T>(T item) where T : class
+    public static DataItem<T> Create<T>(T item) where T : class
     {
         return new DataItem<T>(item, false);
     }
     
-    internal static IDataItem<T> Create<T>(T item, bool isPlaceholder) where T : class
+    internal static DataItem<T> Create<T>(T item, bool isPlaceholder) where T : class
     {
         return new DataItem<T>(item, isPlaceholder);
     }
+    
+    internal abstract object ItemObject { get; set; }
+    
+    public abstract bool IsLoading { get;  internal set; }
 }
 
-internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : class
+public class DataItem<T> : DataItem, INotifyPropertyChanged where T : class
 {
     private T _item;
     private bool _isLoading;
@@ -39,10 +31,10 @@ internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : clas
         _isLoading = isPlaceholder;
     }
 
-    public bool IsLoading
+    public override bool IsLoading
     {
         get => _isLoading;
-        private set
+        internal set
         {
             if (value == _isLoading) return;
             _isLoading = value;
@@ -50,13 +42,7 @@ internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : clas
         }
     }
 
-    bool IDataItem.IsLoading
-    {
-        get => IsLoading;
-        set => IsLoading = value;
-    }
-
-    object IDataItem.Item
+    internal override object ItemObject
     {
         get => Item;
         set => Item = (T)value;
@@ -77,5 +63,16 @@ internal class DataItem<T> : IDataItem<T>, INotifyPropertyChanged where T : clas
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public static implicit operator T(DataItem<T> dataItem)
+    {
+        return dataItem.Item;
+    }
+    
+    // Implicit conversion from T to DataItem<T>
+    public static implicit operator DataItem<T>(T item)
+    {
+        return new DataItem<T>(item, false);
     }
 }
