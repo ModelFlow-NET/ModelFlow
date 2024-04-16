@@ -15,6 +15,18 @@ public class DataSource
     public static IDataSourceCallbacks? DataSourceCallbacks;
 }
 
+public abstract class DataSource<TViewModel> : DataSource<TViewModel, TViewModel> where TViewModel : class
+{
+    protected DataSource(int pageSize, int maxPages, bool autoSync = true) : base(x => x, pageSize, maxPages, autoSync)
+    {
+    }
+
+    protected override TViewModel? GetModelForViewModel(TViewModel viewModel)
+    {
+        return viewModel;
+    }
+}
+
 public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceProviderAsync<DataItem<TViewModel>>
     where TViewModel : class
 {

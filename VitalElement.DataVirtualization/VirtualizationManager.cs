@@ -24,6 +24,8 @@
         
         public static IScheduler? UiThreadScheduler { get; set; }
 
+        public static TimeSpan PropertySyncThrottleTime { get; set; } = TimeSpan.FromMilliseconds(400);
+
         public Func<Action, Task>? UiThreadExcecuteAction
         {
             get => _uiThreadExcecuteAction;

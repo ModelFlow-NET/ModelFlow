@@ -7,7 +7,7 @@ using DataManagement;
 
 public static class Extensions
 {
-    public static DataSource<TViewModel, T> CreateSortDescription<TViewModel, T, TProperty>(this DataSource<TViewModel, T> source, Expression<Func<T, TProperty>> propertyExpression, ListSortDirection direction)
+    public static DataSource<TViewModel, T> AddSortDescription<TViewModel, T, TProperty>(this DataSource<TViewModel, T> source, Expression<Func<T, TProperty>> propertyExpression, ListSortDirection direction)
         where TViewModel : class
     {
         var propertyName = GetPropertyName(propertyExpression);
@@ -15,6 +15,14 @@ public static class Extensions
         source.SortDescriptionList.Add(new SortDescription(propertyName, direction));
 
         return source;
+    }
+    
+    public static SortDescription CreateSortDescription<TViewModel, T, TProperty>(this DataSource<TViewModel, T> source, Expression<Func<T, TProperty>> propertyExpression, ListSortDirection direction)
+        where TViewModel : class
+    {
+        var propertyName = GetPropertyName(propertyExpression);
+
+        return new SortDescription(propertyName, direction);
     }
     
     private static string GetPropertyName<T, TProperty>(Expression<Func<T, TProperty>> propertyExpression)

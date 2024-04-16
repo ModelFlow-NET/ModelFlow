@@ -19,7 +19,7 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
         
     public RemoteOrDbDataSource() : base (x=>x, 50, 4)
     {
-        this.CreateSortDescription(x => x.Id, ListSortDirection.Descending);
+        this.AddSortDescription(x => x.Id, ListSortDirection.Descending);
         
         Emulation = new RemoteOrDbDataSourceEmulation(100000);
 

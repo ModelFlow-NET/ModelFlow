@@ -19,7 +19,7 @@ public partial class NameHeaderViewModel : ViewModelBase
                 ? ListSortDirection.Descending
                 : ListSortDirection.Ascending;
 
-            dataSource.CreateSortDescription(property, _sortDirection);
+            dataSource.AddSortDescription(property, _sortDirection);
         });
     }
     

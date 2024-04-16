@@ -53,10 +53,15 @@ internal static class DataSourceSyncManager
 
             var uiThreadScheduler = VirtualizationManager.UiThreadScheduler ?? Scheduler.CurrentThread;
             
-            _propertyChangedSubject
-                .Throttle(TimeSpan.FromMilliseconds(400))
-                .ObserveOn(uiThreadScheduler)
-                .Do(OnUpdate)
+            IObservable<Unit> observeChanges = _propertyChangedSubject;
+
+            if (VirtualizationManager.PropertySyncThrottleTime > TimeSpan.Zero)
+            {
+                observeChanges = observeChanges.Throttle(VirtualizationManager.PropertySyncThrottleTime)
+                    .ObserveOn(uiThreadScheduler);
+            }
+
+            observeChanges.Do(OnUpdate)
                 .Subscribe()
                 .DisposeWith(_subscriptions);
 
