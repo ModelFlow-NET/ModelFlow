@@ -58,7 +58,7 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
 
     public override Task<RemoteOrDbDataItem?> GetItemAsync(Expression<Func<RemoteOrDbDataItem, bool>> predicate)
     {
-        return Task.FromResult((RemoteOrDbDataItem?)null);
+        return _remoteDatas.GetRowAsync(predicate);
     }
 
     protected override async Task<int> GetCountAsync(Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterQuery)

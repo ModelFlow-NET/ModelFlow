@@ -45,7 +45,7 @@
             
             ItemSource = source;
 
-            SelectRandomCommand = ReactiveCommand.Create(() =>
+            SelectRandomCommand = ReactiveCommand.Create(async () =>
             {
                 var rand = new Random((int)DateTime.Now.Ticks);
 
@@ -53,12 +53,18 @@
 
                 RandomIndex = index;
 
-                SelectedItem = dataSource.Emulation.Items[index];
+                if (await dataSource.GetViewModelAsync(x => x.Int1 == RandomIndex) is { } item)
+                {
+                    SelectedItem = item;
+                }
             });
             
             Dispatcher.UIThread.Post(async () =>
             {
-                SelectedItem = dataSource.Emulation.Items[500]; 
+                if (await dataSource.GetViewModelAsync(x => x.Int1 == 500) is { } item)
+                {
+                    SelectedItem = item;
+                }
             });
         }
 
