@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using Interfaces;
 
-    public class PagedSourceProviderMakeAsync<T> : BasePagedSourceProvider<T>, IPagedSourceProviderAsync<T>,
+    internal class PagedSourceProviderMakeAsync<T> : BasePagedSourceProvider<T>, IPagedSourceProviderAsync<T>,
         IProviderPreReset
     {
         public PagedSourceProviderMakeAsync()
@@ -35,6 +35,11 @@
         public Func<int, int, int, T> FuncGetPlaceHolder { get; set; }
 
         public Func<T, Task<int>> FuncIndexOfAsync { get; set; }
+
+        public void Replace(T old, T newItem)
+        {
+            throw new NotImplementedException();
+        }
 
         public Task<bool> ContainsAsync(T item)
         {

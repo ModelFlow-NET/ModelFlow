@@ -6,7 +6,7 @@
     /// <summary>
     ///     An implementation of a IPageExiryComparer that uses DateTime to see if the update should be applied
     /// </summary>
-    public class DateBasedPageExpiryComparer : IPageExpiryComparer
+    internal class DateBasedPageExpiryComparer : IPageExpiryComparer
     {
         /// <summary>
         ///     Gets the default instance.

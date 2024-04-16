@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Pageing
 {
-    public enum PageFetchStateEnum
+    internal enum PageFetchStateEnum
     {
         Fetched,
         Placeholders

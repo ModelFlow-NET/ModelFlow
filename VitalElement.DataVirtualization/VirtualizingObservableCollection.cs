@@ -8,11 +8,12 @@
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
+    using DataManagement;
     using Interfaces;
     using Pageing;
 
-    public class VirtualizingObservableCollection<T> : IEnumerable, IEnumerable<T>, ICollection, ICollection<T>, IList, IReadOnlyList<T>, IReadOnlyObservableCollection<T>,
-        IList<T>, IObservableCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged where T : class
+    internal class VirtualizingObservableCollection<T> : IEnumerable, IEnumerable<T>, ICollection, ICollection<T>, IList, IReadOnlyList<T>, IReadOnlyObservableCollection<T>,
+        IList<T>, IObservableCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged where T : DataItem, IDataItem
     {
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -21,19 +22,19 @@
 
         public IEnumerator<T> GetEnumerator() => new VirtualizingObservableCollectionEnumerator<T>(this);
 
-        public class VirtualizingObservableCollectionEnumerator<TT> : IEnumerator<TT> where TT : class
+        public class VirtualizingObservableCollectionEnumerator<T> : IEnumerator<T> where T : DataItem, IDataItem
         {
             private int _iLoop;
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
             /// </summary>
-            public VirtualizingObservableCollectionEnumerator(VirtualizingObservableCollection<TT> baseCollection)
+            public VirtualizingObservableCollectionEnumerator(VirtualizingObservableCollection<T> baseCollection)
             {
                 BaseCollection = baseCollection;
             }
 
-            public VirtualizingObservableCollection<TT> BaseCollection { get; }
+            public VirtualizingObservableCollection<T> BaseCollection { get; }
 
             public void Dispose()
             {
@@ -73,7 +74,7 @@
             /// <returns>
             ///     The element in the collection at the current position of the enumerator.
             /// </returns>
-            public TT Current { get; private set; }
+            public T Current { get; private set; }
 
             object IEnumerator.Current => Current;
         }
@@ -83,7 +84,7 @@
         ///     Initializes a new instance of the <see cref="VirtualizingObservableCollection{T}" /> class.
         /// </summary>
         /// <param name="provider">The provider.</param>
-        public VirtualizingObservableCollection(IItemSourceProvider<T> provider) : this()
+        internal VirtualizingObservableCollection(IItemSourceProvider<T> provider) : this()
         {
             Provider = provider;
         }
@@ -511,7 +512,7 @@
         /// <value>
         ///     The provider.
         /// </value>
-        public IItemSourceProvider<T> Provider
+        internal IItemSourceProvider<T> Provider
         {
             get => _provider;
             set

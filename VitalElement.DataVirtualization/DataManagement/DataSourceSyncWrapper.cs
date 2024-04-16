@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Extensions;
 
-public static class DataSourceSyncManager
+internal static class DataSourceSyncManager
 {
     public static IDisposable AutoManage<TViewModel, TModel>(
         this DataSource<TViewModel, TModel> dataSource,
@@ -53,10 +53,15 @@ public static class DataSourceSyncManager
 
             var uiThreadScheduler = VirtualizationManager.UiThreadScheduler ?? Scheduler.CurrentThread;
             
-            _propertyChangedSubject
-                .Throttle(TimeSpan.FromMilliseconds(400))
-                .ObserveOn(uiThreadScheduler)
-                .Do(OnUpdate)
+            IObservable<Unit> observeChanges = _propertyChangedSubject;
+
+            if (VirtualizationManager.PropertySyncThrottleTime > TimeSpan.Zero)
+            {
+                observeChanges = observeChanges.Throttle(VirtualizationManager.PropertySyncThrottleTime)
+                    .ObserveOn(uiThreadScheduler);
+            }
+
+            observeChanges.Do(OnUpdate)
                 .Subscribe()
                 .DisposeWith(_subscriptions);
 

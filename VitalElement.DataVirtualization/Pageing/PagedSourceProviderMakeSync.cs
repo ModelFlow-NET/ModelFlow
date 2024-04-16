@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using Interfaces;
 
-    public class PagedSourceProviderMakeSync<T> : IPagedSourceProviderAsync<T>, IProviderPreReset
+    internal class PagedSourceProviderMakeSync<T> : IPagedSourceProviderAsync<T>, IProviderPreReset
     {
         public PagedSourceProviderMakeSync()
         {
@@ -95,6 +95,11 @@
             }
 
             return Task.Run(() => IndexOfAsync(item)).GetAwaiter().GetResult();
+        }
+
+        public void Replace(T old, T newItem)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<bool> ContainsAsync(T item)

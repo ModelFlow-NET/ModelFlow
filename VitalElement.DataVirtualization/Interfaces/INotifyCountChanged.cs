@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface INotifyCountChanged
+    internal interface INotifyCountChanged
     {
         event OnCountChanged CountChanged;
     }

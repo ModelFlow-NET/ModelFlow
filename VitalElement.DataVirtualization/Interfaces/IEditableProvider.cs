@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface IEditableProvider<in T>
+    internal interface IEditableProvider<in T>
     {
         int OnAppend(T item, object timestamp);
         void OnInsert(int index, T item, object timestamp);

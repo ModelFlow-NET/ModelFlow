@@ -9,12 +9,13 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Actions;
+    using DataManagement;
     using Interfaces;
 
-    public class PaginationManager<T> : IItemSourceProvider<T>, INotifyImmediately, IEditableProvider<T>,
+    internal class PaginationManager<T> : IItemSourceProvider<T>, INotifyImmediately, IEditableProvider<T>,
         IEditableProviderIndexBased<T>, IEditableProviderItemBased<T>, IReclaimableService,
         IAsyncResetProvider, IProviderPreReset, INotifyCountChanged, INotifyCollectionChanged,
-        ICollection where T : class
+        ICollection where T : DataItem, IDataItem
     {
         private readonly Dictionary<int, PageDelta> _deltas = new Dictionary<int, PageDelta>();
         private readonly Dictionary<int, ISourcePage<T>> _pages = new Dictionary<int, ISourcePage<T>>();
@@ -335,11 +336,16 @@
                 }
             }
 
-            return !IsAsync
-                ? Provider.IndexOf(item)
-                : ProviderAsync.IndexOfAsync(item).GetAwaiter().GetResult();
+            if (!IsAsync)
+            {
+                return Provider.IndexOf(item);
+            }
+            else
+            {
+                var result = Task.Run(async () => await ProviderAsync.IndexOfAsync(item)).GetAwaiter().GetResult();
 
-            //return this.ProviderAsync.IndexOf(item);
+                return result;
+            }
         }
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
@@ -349,15 +355,15 @@
         /// </summary>
         public event OnCountChanged CountChanged;
 
-        public bool IsNotifyImmidiately
+        public bool IsNotifyImmediately
         {
             get => Provider is INotifyImmediately iNotifyImmediatelyProvider &&
-                   iNotifyImmediatelyProvider.IsNotifyImmidiately;
+                   iNotifyImmediatelyProvider.IsNotifyImmediately;
             set
             {
                 if (Provider is INotifyImmediately iNotifyImmediatelyProvider)
                 {
-                    iNotifyImmediatelyProvider.IsNotifyImmidiately = value;
+                    iNotifyImmediatelyProvider.IsNotifyImmediately = value;
                 }
             }
         }
@@ -1058,7 +1064,7 @@
             CancellationTokenSource cts)
         {
             var realVoc = (VirtualizingObservableCollection<T>) voc;
-            var listOfReplaces = new List<PlaceholderReplaceWA<T>>();
+            var listOfReplaces = new List<PlaceholderReplaceWA>();
 
             if (realVoc != null)
             {
@@ -1088,7 +1094,7 @@
                     if (page.ReplaceNeeded(i))
                     {
                         var oldItem = page.ReplaceAt(i, item, null, null);
-                        listOfReplaces.Add(new PlaceholderReplaceWA<T>(realVoc, oldItem, item, pageOffset + i));
+                        listOfReplaces.Add(new PlaceholderReplaceWA(oldItem, item));
                     }
                     else
                     {
@@ -1101,16 +1107,19 @@
 
             page.PageFetchState = PageFetchStateEnum.Fetched;
 
-            foreach (var replace in listOfReplaces)
+            VirtualizationManager.Instance.RunOnUi(() =>
             {
                 if (cts.IsCancellationRequested)
                 {
                     RemovePageRequest(page.Page);
                     return;
                 }
-
-                VirtualizationManager.Instance.RunOnUi(replace);
-            }
+                
+                foreach (var replace in listOfReplaces)
+                {
+                    replace.Execute();
+                }
+            });
 
             RemovePageRequest(page.Page);
         }

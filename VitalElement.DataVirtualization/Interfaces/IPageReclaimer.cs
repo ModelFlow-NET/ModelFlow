@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public interface IPageReclaimer<T>
+    internal interface IPageReclaimer<T>
     {
         /// <summary>
         ///     Makes the page.

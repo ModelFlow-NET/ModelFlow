@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using Pageing;
 
-    public interface ISourcePage<T>
+    internal interface ISourcePage<T>
     {
         bool CanReclaimPage { get; }
 

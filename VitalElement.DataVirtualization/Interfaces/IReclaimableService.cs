@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface IReclaimableService
+    internal interface IReclaimableService
     {
         void RunClaim(string sectionContext);
     }

@@ -2,20 +2,28 @@ namespace DataGridAsyncDemoMVVM;
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using VitalElement.DataVirtualization.DataManagement;
+using VitalElement.DataVirtualization.Extensions;
 
 public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDataItem>
 {
-    private readonly RemoteOrDbDataSourceEmulation _remoteDatas;
+    private readonly IQueryable<RemoteOrDbDataItem> _remoteDatas;
 
-    private readonly Random _rand = new Random();
+    private readonly Random _rand = new();
+    
+    public RemoteOrDbDataSourceEmulation Emulation { get; }
         
-    public RemoteOrDbDataSource() : base (x=>x, 100, 5)
+    public RemoteOrDbDataSource() : base (x=>x, 50, 4)
     {
-        _remoteDatas = new RemoteOrDbDataSourceEmulation(100000);
+        this.AddSortDescription(x => x.Id, ListSortDirection.Descending);
+        
+        Emulation = new RemoteOrDbDataSourceEmulation(100000);
+
+        _remoteDatas = Emulation.Items.AsQueryable();
     }
 
     protected override void OnMaterialized(RemoteOrDbDataItem item)
@@ -50,35 +58,38 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
 
     public override Task<RemoteOrDbDataItem?> GetItemAsync(Expression<Func<RemoteOrDbDataItem, bool>> predicate)
     {
-        return Task.FromResult((RemoteOrDbDataItem?)null);
+        return _remoteDatas.GetRowAsync(predicate);
     }
 
-    protected override Task<int> GetCountAsync(Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterQuery)
+    protected override async Task<int> GetCountAsync(Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterQuery)
     {
-        return Task.Run(() =>
+        //await Task.Delay(1000 + (int)Math.Round(_rand.NextDouble() * 30));
+
+        return await _remoteDatas.GetRowCountAsync(filterQuery);
+    }
+
+    protected override async Task<IEnumerable<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count, Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterSortQuery)
+    {
+        if (count > 5)
         {
-            Task.Delay(1000 + (int) Math.Round(_rand.NextDouble() * 30)).Wait(); // Just to slow it down !
-            return filterQuery(_remoteDatas.Items.AsQueryable()).Count();
-        });
+            await Task.Delay(1500 + (int)Math.Round(_rand.NextDouble() * 100));
+        }
+
+        return await _remoteDatas.GetRowsAsync(offset, count, filterSortQuery);
     }
 
-    protected override Task<IEnumerable<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count, Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> query)
+    protected override RemoteOrDbDataItem? GetPlaceHolder(int index, int page, int offset)
     {
-        return Task.Run(() =>
-        {
-            Task.Delay(1500 + (int) Math.Round(_rand.NextDouble() * 100)).Wait(); // Just to slow it down !
-            return (from items in query(_remoteDatas.Items.AsQueryable()) select items).Skip(offset)
-                .Take(count).AsEnumerable();
-        });   
+        return new RemoteOrDbDataItem(-1, "", "loading...", "", index, offset);
     }
 
-    protected override RemoteOrDbDataItem GetPlaceHolder(int index, int page, int offset)
+    protected override bool ModelsEqual(RemoteOrDbDataItem a, RemoteOrDbDataItem b)
     {
-        return new RemoteOrDbDataItem {Name = "Waiting [" + page + "/" + offset + "]"};
+        return a.Id == b.Id;
     }
 
-    protected override Task<int> IndexOfAsync(RemoteOrDbDataItem item)
+    protected override RemoteOrDbDataItem? GetModelForViewModel(RemoteOrDbDataItem viewModel)
     {
-        return Task.FromResult(-1);
+        return viewModel;
     }
 }

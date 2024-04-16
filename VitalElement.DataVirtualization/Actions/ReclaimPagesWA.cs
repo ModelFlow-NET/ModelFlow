@@ -3,7 +3,7 @@
     using System;
     using Interfaces;
 
-    public class ReclaimPagesWA : BaseRepeatableActionVirtualization
+    internal class ReclaimPagesWA : BaseRepeatableActionVirtualization
     {
         readonly string _sectionContext = "";
 

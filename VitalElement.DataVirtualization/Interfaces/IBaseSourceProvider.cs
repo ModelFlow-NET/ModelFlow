@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface IBaseSourceProvider<T> : ISynchronized
+    internal interface IBaseSourceProvider : ISynchronized
     {
         void OnReset(int count);
     }

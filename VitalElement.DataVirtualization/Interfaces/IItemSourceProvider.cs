@@ -1,6 +1,6 @@
 ﻿namespace VitalElement.DataVirtualization.Interfaces
 {
-    public interface IItemSourceProvider<T> : IBaseSourceProvider<T>
+    internal interface IItemSourceProvider<T> : IBaseSourceProvider
     {
         bool Contains(T item);
         T GetAt(int index, object voc);

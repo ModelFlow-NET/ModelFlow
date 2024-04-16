@@ -2,7 +2,7 @@
 {
     using VitalElement.DataVirtualization.Interfaces;
 
-    public class ItemSourceProvider<T> : IItemSourceProvider<T>
+    internal class ItemSourceProvider<T> : IItemSourceProvider<T>
     {
         private readonly IList<T> _source;
 

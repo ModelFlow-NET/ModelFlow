@@ -10,7 +10,7 @@
     ///     they where last touched.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class PageReclaimOnTouched<T> : IPageReclaimer<T>
+    internal class PageReclaimOnTouched<T> : IPageReclaimer<T>
     {
         /// <inheritdoc />
         /// <summary>

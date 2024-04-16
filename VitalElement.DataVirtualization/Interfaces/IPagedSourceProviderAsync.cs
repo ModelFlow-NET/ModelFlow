@@ -2,9 +2,8 @@
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Pageing;
 
-    public interface IPagedSourceProviderAsync<T> :  IBaseSourceProvider<T>
+    internal interface IPagedSourceProviderAsync<T> :  IBaseSourceProvider
     {
         Task<bool> ContainsAsync(T item);
 
