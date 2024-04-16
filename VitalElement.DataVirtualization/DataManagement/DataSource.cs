@@ -234,6 +234,22 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     }
 
     /// <summary>
+    /// This ensures your datasource count is initialised. You need this to happen usually before selecting an item.
+    /// </summary>
+    public async Task EnsureInitialisedAsync()
+    {
+        if (!IsInitialised)
+        {
+            var count = Collection.Count;
+
+            while (!IsInitialised)
+            {
+                await Task.Delay(10);
+            }
+        }
+    }
+
+    /// <summary>
     /// Creates the viewmodel in the datasource.
     /// i.e. Add a new model to the datasource based on the viewmodel.
     /// </summary>

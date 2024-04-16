@@ -4,10 +4,10 @@
 
     internal struct PlaceholderReplaceWA
     {
-        private DataItem _newValue;
-        private DataItem _oldValue;
+        private IDataItem _newValue;
+        private IMutateDataItem _oldValue;
 
-        public PlaceholderReplaceWA(DataItem oldValue, DataItem newValue)
+        public PlaceholderReplaceWA(IMutateDataItem oldValue, IDataItem newValue)
         {
             _oldValue = oldValue;
             _newValue = newValue;
@@ -15,8 +15,8 @@
 
         public void Execute()
         {
-            _oldValue.ItemObject = _newValue.ItemObject;
-            _oldValue.IsLoading = false;
+            _oldValue.SetItem(_newValue.Item);
+            _oldValue.SetIsLoading(false);
         }
     }
 }

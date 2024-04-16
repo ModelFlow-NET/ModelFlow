@@ -13,7 +13,7 @@
     using Pageing;
 
     internal class VirtualizingObservableCollection<T> : IEnumerable, IEnumerable<T>, ICollection, ICollection<T>, IList, IReadOnlyList<T>, IReadOnlyObservableCollection<T>,
-        IList<T>, IObservableCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged where T : DataItem
+        IList<T>, IObservableCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged where T : DataItem, IDataItem
     {
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -22,7 +22,7 @@
 
         public IEnumerator<T> GetEnumerator() => new VirtualizingObservableCollectionEnumerator<T>(this);
 
-        public class VirtualizingObservableCollectionEnumerator<T> : IEnumerator<T> where T : DataItem
+        public class VirtualizingObservableCollectionEnumerator<T> : IEnumerator<T> where T : DataItem, IDataItem
         {
             private int _iLoop;
 

@@ -10,6 +10,31 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="DataGridAsyncDemoMVVM">
     <TabControl>
+        <TabItem Header="ListBox">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Spacing="20">
+                    <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
+                    <TextBlock Text="{Binding RandomIndex}"/>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Item.Id}" />
+                                    <TextBlock Text="{Binding Item.Str1}" />
+                                    <TextBlock Text="{Binding Item.Str2}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding IsLoading}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </TabItem>
+        
         <TabItem Header="ComboBox">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Spacing="20">
@@ -33,31 +58,6 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-            </DockPanel>
-        </TabItem>
-        
-        <TabItem Header="ListBox">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Spacing="20">
-                    <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
-                    <TextBlock Text="{Binding RandomIndex}"/>
-                </StackPanel>
-                <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Item.Id}" />
-                                    <TextBlock Text="{Binding Item.Str1}" />
-                                    <TextBlock Text="{Binding Item.Str2}" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding IsLoading}" />
-                                </StackPanel>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
             </DockPanel>
         </TabItem>
     </TabControl>

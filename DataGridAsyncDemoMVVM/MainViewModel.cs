@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using System.Windows.Input;
     using Avalonia.Controls;
     using Avalonia.Controls.Models.TreeDataGrid;
@@ -61,11 +62,24 @@
             
             Dispatcher.UIThread.Post(async () =>
             {
+                await dataSource.EnsureInitialisedAsync();
                 if (await dataSource.GetViewModelAsync(x => x.Int1 == 500) is { } item)
                 {
                     SelectedItem = item;
                 }
             });
+        }
+
+        partial void OnSelectedItemChanged(DataItem<RemoteOrDbDataItem>? value)
+        {
+            if (value != null)
+            {;
+                RandomIndex = value.Item.Int1;
+            }
+            else
+            {
+                RandomIndex = -1;
+            }
         }
 
         public IReadOnlyCollection<DataItem<RemoteOrDbDataItem>> Items { get; }

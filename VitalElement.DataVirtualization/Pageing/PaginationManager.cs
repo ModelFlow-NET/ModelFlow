@@ -15,7 +15,7 @@
     internal class PaginationManager<T> : IItemSourceProvider<T>, INotifyImmediately, IEditableProvider<T>,
         IEditableProviderIndexBased<T>, IEditableProviderItemBased<T>, IReclaimableService,
         IAsyncResetProvider, IProviderPreReset, INotifyCountChanged, INotifyCollectionChanged,
-        ICollection where T : DataItem
+        ICollection where T : DataItem, IDataItem
     {
         private readonly Dictionary<int, PageDelta> _deltas = new Dictionary<int, PageDelta>();
         private readonly Dictionary<int, ISourcePage<T>> _pages = new Dictionary<int, ISourcePage<T>>();

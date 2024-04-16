@@ -3,7 +3,21 @@ namespace VitalElement.DataVirtualization.DataManagement;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-public abstract class DataItem
+public interface IDataItem
+{
+    object Item { get; }
+    
+    bool IsLoading { get; }
+}
+
+internal interface IMutateDataItem
+{
+    void SetItem(object item);
+
+    void SetIsLoading(bool loading);
+}
+
+public abstract class DataItem : IMutateDataItem
 {
     public static DataItem<T> Create<T>(T item) where T : class
     {
@@ -14,13 +28,23 @@ public abstract class DataItem
     {
         return new DataItem<T>(item, isPlaceholder);
     }
+
+    protected internal abstract void SetItem(object item);
     
-    internal abstract object ItemObject { get; set; }
-    
-    public abstract bool IsLoading { get;  internal set; }
+    protected internal abstract void SetIsLoading(bool isLoading);
+
+    void IMutateDataItem.SetItem(object item)
+    {
+        SetItem(item);
+    }
+
+    void IMutateDataItem.SetIsLoading(bool loading)
+    {
+        SetIsLoading(loading);
+    }
 }
 
-public class DataItem<T> : DataItem, INotifyPropertyChanged where T : class
+public class DataItem<T> : DataItem, IDataItem, INotifyPropertyChanged where T : class
 {
     private T _item;
     private bool _isLoading;
@@ -31,7 +55,7 @@ public class DataItem<T> : DataItem, INotifyPropertyChanged where T : class
         _isLoading = isPlaceholder;
     }
 
-    public override bool IsLoading
+    public bool IsLoading
     {
         get => _isLoading;
         internal set
@@ -42,11 +66,7 @@ public class DataItem<T> : DataItem, INotifyPropertyChanged where T : class
         }
     }
 
-    internal override object ItemObject
-    {
-        get => Item;
-        set => Item = (T)value;
-    }
+    object IDataItem.Item => Item;
 
     public T Item
     {
@@ -74,5 +94,18 @@ public class DataItem<T> : DataItem, INotifyPropertyChanged where T : class
     public static implicit operator DataItem<T>(T item)
     {
         return new DataItem<T>(item, false);
+    }
+
+    protected internal override void SetIsLoading(bool isLoading)
+    {
+        IsLoading = isLoading;   
+    }
+
+    protected internal override void SetItem(object item)
+    {
+        if (item is T obj)
+        {
+            Item = obj;
+        }
     }
 }
