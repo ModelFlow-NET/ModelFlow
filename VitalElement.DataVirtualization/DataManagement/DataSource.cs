@@ -269,6 +269,10 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <returns>true if it was a success.</returns>
     public async Task<bool> CreateAsync(TViewModel viewModel)
     {
+        // Ensure the datasource is initialised, otherwise it can cause a race condition
+        // The insert will want to ask for the count in a sync fashion.
+        await EnsureInitialisedAsync();
+
         try
         {
             if (DataSourceCallbacks is { })
