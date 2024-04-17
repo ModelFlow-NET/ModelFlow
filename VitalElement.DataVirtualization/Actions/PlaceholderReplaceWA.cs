@@ -15,8 +15,8 @@
 
         public void Execute()
         {
-            _oldValue.SetItem(_newValue.Item);
             _oldValue.SetIsLoading(false);
+            _oldValue.SetItem(_newValue.Item);
         }
     }
 }
