@@ -62,7 +62,7 @@
             return tcs.Task;
         }
 
-        public Task<IEnumerable<T>> GetItemsAtAsync(int pageoffset, int count)
+        public Task<IEnumerable<T>> GetItemsAtAsync(ISourcePage<T> page, int pageoffset, int count)
         {
             var tcs = new TaskCompletionSource<IEnumerable<T>>();
 

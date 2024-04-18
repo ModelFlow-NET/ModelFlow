@@ -13,10 +13,10 @@ internal static class DataSourceSyncManager
 {
     public static IDisposable AutoManage<TViewModel, TModel>(
         this DataSource<TViewModel, TModel> dataSource,
-        IAutoSynchronize viewModel)
+        DataItem<TViewModel> item)
         where TViewModel : class
     {
-        return new DataSourceSyncWrapper<TViewModel, TModel>(dataSource, viewModel);
+        return new DataSourceSyncWrapper<TViewModel, TModel>(dataSource, item);
     }
 
     private class DataSourceSyncWrapper<TViewModel, TModel>
@@ -24,14 +24,18 @@ internal static class DataSourceSyncManager
         where TViewModel : class
     {
         private readonly DataSource<TViewModel, TModel> _dataSource;
+        private readonly DataItem<TViewModel> _item;
         private readonly IAutoSynchronize _viewModel;
         private readonly CompositeDisposable _subscriptions;
         private readonly Subject<Unit> _propertyChangedSubject;
 
         public DataSourceSyncWrapper(
             DataSource<TViewModel, TModel> dataSource,
-            IAutoSynchronize viewModel)
+            DataItem<TViewModel> item)
         {
+            if (item.Item is not IAutoSynchronize viewModel)
+                throw new NotSupportedException("Your viewmodel must implement IAutoSynchronize");
+
             if (viewModel.IsManaged)
             {
                 throw new Exception(
@@ -39,6 +43,7 @@ internal static class DataSourceSyncManager
             }
 
             _dataSource = dataSource;
+            _item = item;
             _viewModel = viewModel;
 
             viewModel.IsManaged = true;
@@ -65,7 +70,7 @@ internal static class DataSourceSyncManager
                 .Subscribe()
                 .DisposeWith(_subscriptions);
 
-            _viewModel.OnDeleteRequested
+            viewModel.OnDeleteRequested
                 .Do(OnDelete)
                 .Subscribe()
                 .DisposeWith(_subscriptions);
@@ -79,18 +84,12 @@ internal static class DataSourceSyncManager
 
         private async void OnUpdate(Unit unit)
         {
-            if (_viewModel is TViewModel vm)
-            {
-                await _dataSource.UpdateAsync(vm);
-            }
+            await _dataSource.UpdateAsync(_item.Item);
         }
         
         private async void OnDelete(Unit unit)
         {
-            if (_viewModel is TViewModel vm)
-            {
-                await _dataSource.DeleteAsync(vm);
-            }
+            await _dataSource.DeleteAsync(_item);
         }
 
         private void OnViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs args)

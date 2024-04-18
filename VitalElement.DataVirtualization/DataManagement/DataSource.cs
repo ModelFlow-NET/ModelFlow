@@ -237,11 +237,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// This can be used to subscribe to model changes. After this is called, Database synchronisation will be active.
     /// </summary>
     /// <param name="item">The ViewModel that was created.</param>
-    protected virtual void OnMaterialized(TViewModel item)
+    protected virtual void OnMaterialized(DataItem<TViewModel> item)
     {
-        if (_autoSyncEnabled && item is IAutoSynchronize { IsManaged: false } vm)
+        if (_autoSyncEnabled && item.Item is IAutoSynchronize { IsManaged: false } vm)
         {
-            this.AutoManage(vm);
+            this.AutoManage(item);
         }
     }
 
@@ -267,7 +267,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// </summary>
     /// <param name="viewModel"></param>
     /// <returns>true if it was a success.</returns>
-    public async Task<bool> CreateAsync(TViewModel viewModel)
+    public async Task<(bool success, int index, DataItem<TViewModel>? item)> CreateAsync(TViewModel viewModel)
     {
         // Ensure the datasource is initialised, otherwise it can cause a race condition
         // The insert will want to ask for the count in a sync fashion.
@@ -279,27 +279,31 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             {
                 if (!await DataSourceCallbacks.OnBeforeCreateOperation(viewModel))
                 {
-                    return false;
+                    return (false, -1, null);
                 }
             }
 
             bool isSuccess = await DoCreateAsync(viewModel);
+            int index = -1;
+            DataItem<TViewModel>? item = null;
 
             if (isSuccess)
             {
                 // to do, maintain a dictionary, so we dont get duplicates when retrieved from source.
-                var index = await IndexOfAsync(viewModel);
+                index = await IndexOfAsync(viewModel);
+
+                item = DataItem.Create(viewModel);
 
                 if (index >= 0)
                 {
-                    _collection.Insert(index, viewModel);
+                    _collection.Insert(index, item);
                 }
                 else
                 {
-                    _collection.Add(viewModel);
+                    _collection.Add(item);
                 }
 
-                await ProcessMaterializedItem(viewModel);
+                await ProcessMaterializedItem(DataItem.Create(viewModel));
             }
 
             if (DataSourceCallbacks is { })
@@ -307,7 +311,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
                 await DataSourceCallbacks.OnCreateOperationCompleted(viewModel, isSuccess);
             }
 
-            return isSuccess;
+            return (isSuccess, index, item);
         }
         catch (Exception e)
         {
@@ -317,7 +321,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             }
         }
 
-        return false;
+        return (false, -1, null);
     }
 
     /// <summary>
@@ -378,7 +382,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// </summary>
     /// <param name="viewModel">The viewmodel that will be deleted.</param>
     /// <returns>true if the delete was a success.</returns>
-    public async Task<bool> DeleteAsync(TViewModel viewModel)
+    public async Task<bool> DeleteAsync(DataItem<TViewModel> viewModel)
     {
         try
         {
@@ -390,11 +394,13 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
                 }
             }
 
-            bool isSuccess = await DoDeleteAsync(viewModel);
+            var index = _collection.IndexOf(viewModel);
 
-            if (isSuccess)
+            bool isSuccess = await DoDeleteAsync(viewModel.Item);
+
+            if (isSuccess && index >= 0)
             {
-                _collection.Remove(viewModel);
+                _collection.RemoveAt(index);
             }
 
             if (DataSourceCallbacks is { })
@@ -435,7 +441,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <returns>An instance of <see cref="TViewModel"/> or null.</returns>
     public async Task<TViewModel?> GetViewModelAsync(Expression<Func<TModel, bool>> predicate)
     {
-        TViewModel? result = null;
+        DataItem<TViewModel>? result = null;
 
         var item = await GetItemAsync(predicate);
 
@@ -445,11 +451,6 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
             await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
             {
-                if (result is INeedsInitializationAsync toInitialize)
-                {
-                    await toInitialize.InitializeAsync();
-                }
-
                 result = await Materialize(item);
 
                 completionSource.SetResult(true);
@@ -458,21 +459,33 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             await completionSource.Task;
         }
 
-        return result;
+        return result?.Item;
     }
 
-    private async Task<TViewModel> Materialize(TModel item)
+    private async Task<DataItem<TViewModel>> Materialize(ISourcePage<DataItem<TViewModel>> page, int pageIndex, TModel item)
     {
-        var result = _selector(item);
+        var result = page.GetAt(pageIndex);
+        
+        result.SetIsLoading(false);
+        result.SetItem(_selector(item));
 
         await ProcessMaterializedItem(result);
 
         return result;
     }
 
-    private async Task ProcessMaterializedItem(TViewModel viewModel)
+    private async Task<DataItem<TViewModel>> Materialize(TModel item)
     {
-        if (viewModel is INeedsInitializationAsync toInitialize)
+        var result = DataItem.Create(_selector(item));
+
+        await ProcessMaterializedItem(result);
+
+        return result;
+    }
+
+    private async Task ProcessMaterializedItem(DataItem<TViewModel> viewModel)
+    {
+        if (viewModel.Item is INeedsInitializationAsync toInitialize)
         {
             await toInitialize.InitializeAsync();
         }
@@ -592,20 +605,20 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         OnReset(count);
     }
 
-    async Task<IEnumerable<DataItem<TViewModel>>> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetItemsAtAsync(
+    async Task<IEnumerable<DataItem<TViewModel>>> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetItemsAtAsync(ISourcePage<DataItem<TViewModel>> page,
         int offset, int count)
     {
         var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
 
-        List<TViewModel> result = new List<TViewModel>();
+        var result = new List<DataItem<TViewModel>>();
 
         var completionSource = new TaskCompletionSource<bool>();
 
         await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
         {
-            foreach (var item in items)
+            for (int i = 0; i < count; i++)
             {
-                result.Add(await Materialize(item));
+                result.Add(await Materialize(page, i, items[i]));
             }
 
             completionSource.SetResult(true);
@@ -613,12 +626,17 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
         await completionSource.Task;
 
-        return result.Select(x => new DataItem<TViewModel>(x, false));
+        return result;
     }
 
     DataItem<TViewModel> IPagedSourceProviderAsync<DataItem<TViewModel>>.
         GetPlaceHolder(int index, int page, int offset) =>
         DataItem.Create(GetPlaceHolder(index, page, offset), true);
+
+    void IPagedSourceProviderAsync<DataItem<TViewModel>>.Replace(DataItem<TViewModel> old, DataItem<TViewModel> newItem)
+    {
+        // DO NOTHING
+    }
 
     Task<bool> IPagedSourceProviderAsync<DataItem<TViewModel>>.ContainsAsync(DataItem<TViewModel> item)
     {

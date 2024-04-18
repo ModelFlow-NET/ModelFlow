@@ -77,9 +77,9 @@
 
         public int Count => Task.Run(GetCountAsync).GetAwaiter().GetResult();
 
-        public IEnumerable<T> GetItemsAt(int pageoffset, int count)
+        public IEnumerable<T> GetItemsAt(ISourcePage<T> page, int pageoffset, int count)
         {
-            return Task.Run(() => GetItemsAtAsync(pageoffset, count)).GetAwaiter().GetResult();
+            return Task.Run(() => GetItemsAtAsync(page, pageoffset, count)).GetAwaiter().GetResult();
         }
 
         public virtual int IndexOf(T item)
@@ -112,7 +112,7 @@
             return FuncGetCountAsync?.Invoke();
         }
 
-        public virtual Task<IEnumerable<T>> GetItemsAtAsync(int pageoffset, int count)
+        public virtual Task<IEnumerable<T>> GetItemsAtAsync(ISourcePage<T> page, int pageoffset, int count)
         {
             return FuncGetItemsAtAsync?.Invoke(pageoffset, count);
         }
