@@ -1063,46 +1063,30 @@
         private async Task DoRealPageGet(object voc, ISourcePage<T> page, int pageOffset, int index,
             CancellationTokenSource cts)
         {
-            var realVoc = (VirtualizingObservableCollection<T>) voc;
-            var listOfReplaces = new List<PlaceholderReplaceWA>();
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
 
-            if (realVoc != null)
+            var data = new PagedSourceItemsPacket<T>(await ProviderAsync.GetItemsAtAsync(page, pageOffset, page.ItemsPerPage));
+
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+
+            page.WiredDateTime = data.LoadedAt;
+
+            var i = 0;
+            foreach (var item in data.Items)
             {
                 if (cts.IsCancellationRequested)
                 {
+                    RemovePageRequest(page.Page);
                     return;
                 }
 
-                var data = new PagedSourceItemsPacket<T>(await ProviderAsync.GetItemsAtAsync(pageOffset, page.ItemsPerPage));
-
-                if (cts.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                page.WiredDateTime = data.LoadedAt;
-
-                var i = 0;
-                foreach (var item in data.Items)
-                {
-                    if (cts.IsCancellationRequested)
-                    {
-                        RemovePageRequest(page.Page);
-                        return;
-                    }
-
-                    if (page.ReplaceNeeded(i))
-                    {
-                        var oldItem = page.ReplaceAt(i, item, null, null);
-                        listOfReplaces.Add(new PlaceholderReplaceWA(oldItem, item));
-                    }
-                    else
-                    {
-                        page.ReplaceAt(i, item, null, null);
-                    }
-
-                    i++;
-                }
+                i++;
             }
 
             page.PageFetchState = PageFetchStateEnum.Fetched;
@@ -1113,11 +1097,6 @@
                 {
                     RemovePageRequest(page.Page);
                     return;
-                }
-                
-                foreach (var replace in listOfReplaces)
-                {
-                    replace.Execute();
                 }
             });
 
@@ -1150,13 +1129,22 @@
 
             CalculateFromIndex(index, out var page, out var offset);
 
-            if (IsPageWired(page))
-            {
-                var dataPage = SafeGetPage(page, null, index);
-                dataPage.InsertAt(offset, item, timestamp, ExpiryComparer);
-            }
+            var dataPage = SafeGetPage(page, null, index);
+            dataPage.InsertAt(offset, item, timestamp, ExpiryComparer);
 
             var adj = AddOrUpdateAdjustment(page, 1);
+
+            bool pageShort = false;
+
+            if (dataPage.ItemsPerPage < PageSize)
+            {
+                pageShort = true;
+            }
+
+            if (pageShort)
+            {
+                dataPage.ItemsPerPage++;
+            }
 
             if (page == _basePage && adj == PageSize * 2)
             {
@@ -1164,7 +1152,6 @@
                 {
                     if (IsPageWired(page))
                     {
-                        var dataPage = SafeGetPage(page, null, index);
                         ISourcePage<T> newdataPage = null;
                         if (IsPageWired(page - 1))
                         {
@@ -1304,6 +1291,7 @@
 
             CalculateFromIndex(index, out var page, out var offset);
 
+            item = GetAt(index, Provider);
             if (IsPageWired(page))
             {
                 var dataPage = SafeGetPage(page, null, index);
@@ -1333,7 +1321,6 @@
             }
             else
             {
-                item = GetAt(index, Provider);
                 var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index);
                 CollectionChanged?.Invoke(this, args);
             }
@@ -1380,39 +1367,26 @@
             {
                 EnsureCount();
             }
+            int index = IndexOf(item);
+            CalculateFromIndex(index, out var page, out var pageIndex);
 
-            int index = -1;
-            lock (PageLock)
+            var dataPage = SafeGetPage(page, null, index);
+            dataPage.RemoveAt(pageIndex, DateTime.Now, ExpiryComparer);
+
+            AddOrUpdateAdjustment(page, -1);
+
+            if (page == _basePage)
             {
-                for (int i = 0; i < _pages.Count; i++)
+                var items = PageSize;
+                if (_deltas.ContainsKey(page))
                 {
-                    var dataPage = _pages[i];
+                    items += _deltas[page].Delta;
+                }
 
-                    index = dataPage.IndexOf(item);
-
-                    if (index != -1)
-                    {
-                        dataPage.RemoveAt(index, DateTime.Now, ExpiryComparer);
-
-                        AddOrUpdateAdjustment(i, -1);
-
-                        if (i == _basePage)
-                        {
-                            var items = PageSize;
-                            if (_deltas.ContainsKey(i))
-                            {
-                                items += _deltas[i].Delta;
-                            }
-
-                            if (items == 0)
-                            {
-                                _deltas.Remove(i);
-                                _basePage++;
-                            }
-                        }
-
-                        break;
-                    }
+                if (items == 0)
+                {
+                    _deltas.Remove(page);
+                    _basePage++;
                 }
             }
 
@@ -1428,7 +1402,7 @@
 
             Interlocked.Decrement(ref _localCount);
 
-            return index;
+            return pageIndex;
         }
 
         public int OnReplace(T oldItem, T newItem, object timestamp)
