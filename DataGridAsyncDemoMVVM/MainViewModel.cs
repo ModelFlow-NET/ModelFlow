@@ -18,7 +18,7 @@
     public partial class MainViewModel : ViewModelBase
     {
         [ObservableProperty]
-        private DataItem<RemoteOrDbDataItem>? _selectedItem;
+        private DataItem<RemoteItemViewModel>? _selectedItem;
 
         [ObservableProperty]
         private int _randomIndex;
@@ -29,24 +29,24 @@
 
             Items = dataSource.Collection;
 
-            var source = new FlatTreeDataGridSource<DataItem<RemoteOrDbDataItem>>(dataSource.Collection);
+            var source = new FlatTreeDataGridSource<DataItem<RemoteItemViewModel>>(dataSource.Collection);
             
-            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Item.Name, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
+            source.Columns.Add(new TextColumn<DataItem<RemoteItemViewModel>, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Item.Name, options: new TextColumnOptions<DataItem<RemoteItemViewModel>>
             {
                 CanUserSortColumn = false
             }));
-            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>("String 1", x => x.Item.Str1, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
+            source.Columns.Add(new TextColumn<DataItem<RemoteItemViewModel>, string>("String 1", x => x.Item.Str1, options: new TextColumnOptions<DataItem<RemoteItemViewModel>>
             {
                 CanUserSortColumn = false
             }));
-            source.Columns.Add(new TextColumn<DataItem<RemoteOrDbDataItem>, string>("String 2", x => x.Item.Str2, options: new TextColumnOptions<DataItem<RemoteOrDbDataItem>>
+            source.Columns.Add(new TextColumn<DataItem<RemoteItemViewModel>, string>("String 2", x => x.Item.Str2, options: new TextColumnOptions<DataItem<RemoteItemViewModel>>
             {
                 CanUserSortColumn = false
             }));
             
             ItemSource = source;
 
-            SelectRandomCommand = ReactiveCommand.Create(async () =>
+            SelectRandomCommand = ReactiveCommand.CreateFromTask(async () =>
             {
                 var rand = new Random((int)DateTime.Now.Ticks);
 
@@ -56,6 +56,18 @@
 
                 if (await dataSource.GetViewModelAsync(x => x.Int1 == RandomIndex) is { } item)
                 {
+                    SelectedItem = DataItem.Create(item);
+                }
+            });
+
+            CreateCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                var i = dataSource.Emulation.Items.Count;
+                var (success, index, item) = await dataSource.CreateAsync(new RemoteItemViewModel(new RemoteOrDbDataItem(i,
+                    "Name_" + i.ToString("00000000000"), "Str1_" + i, "Str1_" + i, i, i)));
+
+                if (success)
+                {
                     SelectedItem = item;
                 }
             });
@@ -63,14 +75,14 @@
             Dispatcher.UIThread.Post(async () =>
             {
                 await dataSource.EnsureInitialisedAsync();
-                if (await dataSource.GetViewModelAsync(x => x.Int1 == 500) is { } item)
+                if (await dataSource.GetViewModelAsync(x => x.Int1 == 5) is { } item)
                 {
-                    SelectedItem = item;
+                    SelectedItem = DataItem.Create(item);
                 }
             });
         }
 
-        partial void OnSelectedItemChanged(DataItem<RemoteOrDbDataItem>? value)
+        partial void OnSelectedItemChanged(DataItem<RemoteItemViewModel>? value)
         {
             if (value != null)
             {;
@@ -82,10 +94,12 @@
             }
         }
 
-        public IReadOnlyCollection<DataItem<RemoteOrDbDataItem>> Items { get; }
+        public IReadOnlyCollection<DataItem<RemoteItemViewModel>> Items { get; }
         
         public ITreeDataGridSource ItemSource { get; }
         
         public ICommand SelectRandomCommand { get; }
+        
+        public ICommand CreateCommand { get; }
     }
 }

@@ -17,7 +17,7 @@ namespace DataGridAsyncDemoMVVM
         public RemoteOrDbDataSourceEmulation(int itemsCount)
         {
             for (var i = 0; i < itemsCount; i++)
-                _items.Add(new RemoteOrDbDataItem(itemsCount - i, "Name_" + i.ToString("00000000000"), "Str1_" + i, "Str1_" + i, i, i));
+                _items.Add(new RemoteOrDbDataItem(i, "Name_" + i.ToString("00000000000"), "Str1_" + i, "Str1_" + i, i, i));
         }
 
         private readonly List<RemoteOrDbDataItem> _items = new();

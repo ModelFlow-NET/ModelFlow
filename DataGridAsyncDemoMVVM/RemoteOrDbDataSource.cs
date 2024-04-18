@@ -6,10 +6,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using DynamicData;
 using VitalElement.DataVirtualization.DataManagement;
 using VitalElement.DataVirtualization.Extensions;
 
-public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDataItem>
+public class RemoteOrDbDataSource : DataSource<RemoteItemViewModel, RemoteOrDbDataItem>
 {
     private readonly IQueryable<RemoteOrDbDataItem> _remoteDatas;
 
@@ -17,33 +18,35 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
     
     public RemoteOrDbDataSourceEmulation Emulation { get; }
         
-    public RemoteOrDbDataSource() : base (x=>x, 50, 4)
+    public RemoteOrDbDataSource() : base (x=> new RemoteItemViewModel(x), 50, 4)
     {
-        this.AddSortDescription(x => x.Id, ListSortDirection.Descending);
+        this.AddSortDescription(x => x.Id, ListSortDirection.Ascending);
         
-        Emulation = new RemoteOrDbDataSourceEmulation(100000);
+        Emulation = new RemoteOrDbDataSourceEmulation(1000);
 
         _remoteDatas = Emulation.Items.AsQueryable();
     }
 
-    protected override void OnMaterialized(RemoteOrDbDataItem item)
+    protected override Task<int> IndexOfAsync(RemoteItemViewModel item, Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterSortQuery)
     {
-        // do nothing.
+        return Task.FromResult(Emulation.Items.IndexOf(item.Model));
     }
 
-    protected override Task<bool> DoCreateAsync(RemoteOrDbDataItem item)
+    protected override Task<bool> DoCreateAsync(RemoteItemViewModel item)
+    {
+        Emulation.Items.Add(item.Model);
+
+        return Task.FromResult(true);
+    }
+
+    protected override Task<bool> DoUpdateAsync(RemoteItemViewModel viewModel)
     {
         throw new NotImplementedException();
     }
 
-    protected override Task<bool> DoUpdateAsync(RemoteOrDbDataItem viewModel)
+    protected override Task<bool> DoDeleteAsync(RemoteItemViewModel item)
     {
-        throw new NotImplementedException();
-    }
-
-    protected override Task<bool> DoDeleteAsync(RemoteOrDbDataItem item)
-    {
-        throw new NotImplementedException();
+        return Task.FromResult(Emulation.Items.Remove(item.Model));
     }
 
     protected override void OnReset(int count)
@@ -51,7 +54,7 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
         // Do nothing.
     }
 
-    protected override Task<bool> ContainsAsync(RemoteOrDbDataItem item)
+    protected override Task<bool> ContainsAsync(RemoteItemViewModel item)
     {
         throw new NotImplementedException();
     }
@@ -78,9 +81,9 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
         return await _remoteDatas.GetRowsAsync(offset, count, filterSortQuery);
     }
 
-    protected override RemoteOrDbDataItem? GetPlaceHolder(int index, int page, int offset)
+    protected override RemoteItemViewModel? GetPlaceHolder(int index, int page, int offset)
     {
-        return new RemoteOrDbDataItem(-1, "", "loading...", "", index, offset);
+        return new RemoteItemViewModel(new RemoteOrDbDataItem(-1, "", "loading...", "", index, offset));
     }
 
     protected override bool ModelsEqual(RemoteOrDbDataItem a, RemoteOrDbDataItem b)
@@ -88,8 +91,8 @@ public class RemoteOrDbDataSource : DataSource<RemoteOrDbDataItem, RemoteOrDbDat
         return a.Id == b.Id;
     }
 
-    protected override RemoteOrDbDataItem? GetModelForViewModel(RemoteOrDbDataItem viewModel)
+    protected override RemoteOrDbDataItem? GetModelForViewModel(RemoteItemViewModel viewModel)
     {
-        return viewModel;
+        return viewModel.Model;
     }
 }
