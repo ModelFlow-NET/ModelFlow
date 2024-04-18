@@ -30,8 +30,6 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <TextBlock Text="{Binding IsLoading}" />
-                                    <TextBlock Text="{Binding Index}" />
-                                    <TextBlock Text="{Binding Id}" />
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>
