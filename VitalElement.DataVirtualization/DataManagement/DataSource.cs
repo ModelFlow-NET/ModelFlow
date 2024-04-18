@@ -40,7 +40,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         _autoSyncEnabled = autoSync;
         _selector = selector;
         _collection = new (
-            new PaginationManager<DataItem<TViewModel>>(this, pageSize: pageSize, maxPages: maxPages));
+            new PaginationManager<DataItem<TViewModel>>(this, ()=>_collection, pageSize: pageSize, maxPages: maxPages));
 
         SortDescriptionList = new SortDescriptionList();
 

@@ -17,6 +17,7 @@
         IAsyncResetProvider, IProviderPreReset, INotifyCountChanged, INotifyCollectionChanged,
         ICollection where T : DataItem, IDataItem
     {
+        private readonly Func<VirtualizingObservableCollection<T>> _getVoc;
         private readonly Dictionary<int, PageDelta> _deltas = new Dictionary<int, PageDelta>();
         private readonly Dictionary<int, ISourcePage<T>> _pages = new Dictionary<int, ISourcePage<T>>();
         private readonly IPageReclaimer<T> _reclaimer;
@@ -33,6 +34,7 @@
         
         public PaginationManager(
             IPagedSourceProviderAsync<T> provider,
+            Func<VirtualizingObservableCollection<T>> getVoc,
             IPageReclaimer<T> reclaimer = null,
             IPageExpiryComparer expiryComparer = null,
             int pageSize = 100,
@@ -41,6 +43,7 @@
             int maxDistance = -1,
             string sectionContext = "")
         {
+            _getVoc = getVoc;
             PageSize = pageSize;
             MaxPages = maxPages;
             MaxDeltas = maxDeltas;
@@ -1128,8 +1131,10 @@
             }
 
             CalculateFromIndex(index, out var page, out var offset);
-
-            var dataPage = SafeGetPage(page, null, index);
+            
+            
+            var dataPage = SafeGetPage(page, _getVoc(), index);
+            
             dataPage.InsertAt(offset, item, timestamp, ExpiryComparer);
 
             var adj = AddOrUpdateAdjustment(page, 1);

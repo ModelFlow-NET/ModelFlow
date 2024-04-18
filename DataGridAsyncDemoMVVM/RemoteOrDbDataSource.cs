@@ -22,7 +22,7 @@ public class RemoteOrDbDataSource : DataSource<RemoteItemViewModel, RemoteOrDbDa
     {
         this.AddSortDescription(x => x.Id, ListSortDirection.Ascending);
         
-        Emulation = new RemoteOrDbDataSourceEmulation(1000);
+        Emulation = new RemoteOrDbDataSourceEmulation(1025);
 
         _remoteDatas = Emulation.Items.AsQueryable();
     }
