@@ -466,7 +466,6 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     {
         var result = page.GetAt(pageIndex);
         
-        result.SetIsLoading(false);
         result.SetItem(_selector(item));
 
         await ProcessMaterializedItem(result);

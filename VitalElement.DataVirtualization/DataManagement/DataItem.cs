@@ -10,14 +10,7 @@ public interface IDataItem
     bool IsLoading { get; }
 }
 
-internal interface IMutateDataItem
-{
-    void SetItem(object item);
-
-    void SetIsLoading(bool loading);
-}
-
-public abstract class DataItem : IMutateDataItem
+public abstract class DataItem
 {
     public static DataItem<T> Create<T>(T item) where T : class
     {
@@ -30,18 +23,6 @@ public abstract class DataItem : IMutateDataItem
     }
 
     protected internal abstract void SetItem(object item);
-    
-    protected internal abstract void SetIsLoading(bool isLoading);
-
-    void IMutateDataItem.SetItem(object item)
-    {
-        SetItem(item);
-    }
-
-    void IMutateDataItem.SetIsLoading(bool loading)
-    {
-        SetIsLoading(loading);
-    }
 }
 
 public class DataItem<T> : DataItem, IDataItem, INotifyPropertyChanged where T : class
@@ -96,16 +77,15 @@ public class DataItem<T> : DataItem, IDataItem, INotifyPropertyChanged where T :
         return new DataItem<T>(item, false);
     }
 
-    protected internal override void SetIsLoading(bool isLoading)
-    {
-        IsLoading = isLoading;   
-    }
-
     protected internal override void SetItem(object item)
     {
+        _isLoading = false;
+
         if (item is T obj)
         {
             Item = obj;
         }
+        
+        OnPropertyChanged(nameof(IsLoading));
     }
 }
