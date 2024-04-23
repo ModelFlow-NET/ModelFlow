@@ -66,17 +66,14 @@ public class RemoteOrDbDataSource : DataSource<RemoteItemViewModel, RemoteOrDbDa
 
     protected override async Task<int> GetCountAsync(Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterQuery)
     {
-        //await Task.Delay(1000 + (int)Math.Round(_rand.NextDouble() * 30));
+        await Task.Delay(40);
 
         return await _remoteDatas.GetRowCountAsync(filterQuery);
     }
 
     protected override async Task<IEnumerable<RemoteOrDbDataItem>> GetItemsAtAsync(int offset, int count, Func<IQueryable<RemoteOrDbDataItem>, IQueryable<RemoteOrDbDataItem>> filterSortQuery)
     {
-        if (count > 5)
-        {
-            await Task.Delay(1500 + (int)Math.Round(_rand.NextDouble() * 100));
-        }
+        await Task.Delay(250);
 
         return await _remoteDatas.GetRowsAsync(offset, count, filterSortQuery);
     }

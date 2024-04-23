@@ -9,13 +9,9 @@
 
     public class VirtualizingObservableCollectionTest
     {
-        private readonly RemoteOrDbDataSource _dataSource;
-
         public VirtualizingObservableCollectionTest()
         {
             VirtualizationManager.Instance.UiThreadExcecuteAction = UiThreadExcecuteAction;
-
-            _dataSource = new();
         }
 
         private Task UiThreadExcecuteAction(Action arg)
@@ -25,62 +21,73 @@
         }
 
         [Fact]
-        public async Task _Count_100()
+        public async Task? Deleting_Last_Item_Not_At_Page_Boundary_Removes_The_Correct_Item()
         {
+            var dataSource = new RemoteOrDbDataSource();
+            
             // Trigger datasource loading.
-            Assert.Equal(0, _dataSource.Collection.Count);
+            Assert.Equal(0, dataSource.Collection.Count);
 
-            await Task.Delay(1000);
+            await dataSource.Collection.WhenAnyValue(x => x.Count)
+                .Skip(1)
+                .FirstAsync();
 
-            Assert.Equal(1025, _dataSource.Collection.Count);
+            Assert.Equal(1025, dataSource.Collection.Count);
 
-            var item = _dataSource.Collection[^1];
+            var item = dataSource.Collection[^1];
 
             Assert.True(item.IsLoading);
 
-            await Observable.FromEventPattern<PropertyChangedEventArgs>(item, nameof(item.PropertyChanged))
-                .Do(x => { })
-                .FirstAsync();
-
+            await item.WhenAnyValue(x => x.IsLoading)
+                .Skip(1).FirstAsync();
+            
             Assert.False(item.IsLoading);
 
-            await _dataSource.DeleteAsync(item);
+            Assert.Same(item, dataSource.Collection[^1]);
+            
+            await dataSource.DeleteAsync(item);
 
-            Assert.Equal(1024, _dataSource.Collection.Count);
+            Assert.Equal(1024, dataSource.Collection.Count);
 
-            Assert.DoesNotContain(item, _dataSource.Collection);
+            Assert.NotSame(item, dataSource.Collection[^1]);
         }
 
         [Fact]
         public async Task Item_Is_Set_When_DataItem_IsLoading_Changes()
         {
+            var dataSource = new RemoteOrDbDataSource();
+            
             // Trigger datasource loading.
-            Assert.Equal(0, _dataSource.Collection.Count);
+            Assert.Equal(0, dataSource.Collection.Count);
+            
+            // Wait for the count to be updated.
+            await dataSource.Collection.WhenAnyValue(x => x.Count)
+                .Skip(1)
+                .FirstAsync();
 
-            await Task.Delay(1000);
-
-            Assert.Equal(1025, _dataSource.Collection.Count);
-
-            var item = _dataSource.Collection[^1];
+            // Get the last item.
+            var item = dataSource.Collection[^1];
             Assert.True(item.IsLoading);
 
             using var monitoredItem = item.Monitor();
             
+            // Check when IsLoading changes, the item is already wrapping the correct model.
             item.WhenAnyValue(x => x.IsLoading)
                 .Skip(1)
                 .Do(x =>
                 {
                     Assert.False(item.IsLoading);
-                    Assert.Same(_dataSource.Emulation.Items[^1], item.Item.Model);
+                    Assert.Same(dataSource.Emulation.Items[^1], item.Item.Model);
                 })
                 .Subscribe();
             
+            // Check when the item changes the IsLoading is correct and the models are set correctly.
             item.WhenAnyValue(x => x.Item)
                 .Skip(1)
                 .Do(x =>
                 {
                     Assert.False(item.IsLoading);
-                    Assert.Same(_dataSource.Emulation.Items[^1], item.Item.Model);
+                    Assert.Same(dataSource.Emulation.Items[^1], item.Item.Model);
                 })
                 .Subscribe();
 
@@ -90,7 +97,7 @@
             monitoredItem.Should().RaisePropertyChangeFor(x => x.Item);
 
             Assert.False(item.IsLoading);
-            Assert.Same(_dataSource.Emulation.Items[^1], item.Item);
+            Assert.Same(dataSource.Emulation.Items[^1], item.Item.Model);
         }
     }
 }
