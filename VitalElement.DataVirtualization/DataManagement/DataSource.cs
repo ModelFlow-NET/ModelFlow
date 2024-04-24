@@ -233,19 +233,6 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     }
 
     /// <summary>
-    /// This will be called when a ViewModel is materialized. It is called AFTER any async initialisation has occurred.
-    /// This can be used to subscribe to model changes. After this is called, Database synchronisation will be active.
-    /// </summary>
-    /// <param name="item">The ViewModel that was created.</param>
-    protected virtual void OnMaterialized(DataItem<TViewModel> item)
-    {
-        if (_autoSyncEnabled && item.Item is IAutoSynchronize { IsManaged: false } vm)
-        {
-            this.AutoManage(item);
-        }
-    }
-
-    /// <summary>
     /// This ensures your datasource count is initialised. You need this to happen usually before selecting an item.
     /// </summary>
     public async Task EnsureInitialisedAsync()
@@ -303,7 +290,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
                     _collection.Add(item);
                 }
 
-                await ProcessMaterializedItem(DataItem.Create(viewModel));
+                await Materialize(item, item.Item);
             }
 
             if (DataSourceCallbacks is { })
@@ -464,32 +451,62 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
     private async Task<DataItem<TViewModel>> Materialize(ISourcePage<DataItem<TViewModel>> page, int pageIndex, TModel item)
     {
-        var result = page.GetAt(pageIndex);
-        
-        result.SetItem(_selector(item));
-
-        await ProcessMaterializedItem(result);
-
-        return result;
+        return await Materialize(page.GetAt(pageIndex), item);
     }
 
     private async Task<DataItem<TViewModel>> Materialize(TModel item)
     {
-        var result = DataItem.Create(_selector(item));
+        return await Materialize(null, item);
+    }
+    
+    private async Task<DataItem<TViewModel>> Materialize(DataItem<TViewModel>? wrapper, TModel model)
+    {
+        var materialized = _selector(model);
 
-        await ProcessMaterializedItem(result);
-
-        return result;
+        return await Materialize(wrapper, materialized);
     }
 
-    private async Task ProcessMaterializedItem(DataItem<TViewModel> viewModel)
+    private async Task<DataItem<TViewModel>> Materialize(DataItem<TViewModel>? wrapper, TViewModel materialized)
     {
-        if (viewModel.Item is INeedsInitializationAsync toInitialize)
+        await InitializeItemAsync(materialized);
+
+        if (wrapper == null)
+        {
+            wrapper = DataItem.Create(materialized);
+        }
+        
+        wrapper.SetItem(materialized);
+        
+        OnMaterializedInternal(wrapper);
+
+        return wrapper;
+    }
+
+    private async Task InitializeItemAsync(TViewModel viewModel)
+    {
+        if (viewModel is INeedsInitializationAsync toInitialize)
         {
             await toInitialize.InitializeAsync();
         }
-
-        OnMaterialized(viewModel);
+    }
+    
+    private void OnMaterializedInternal(DataItem<TViewModel> item)
+    {
+        if (_autoSyncEnabled && item.Item is IAutoSynchronize { IsManaged: false })
+        {
+            this.AutoManage(item);
+        }
+        
+        OnMaterialized(item);
+    }
+    
+    /// <summary>
+    /// This will be called when a ViewModel is materialized. It is called AFTER any async initialisation has occurred.
+    /// This can be used to subscribe to model changes. After this is called, Database synchronisation will be active.
+    /// </summary>
+    /// <param name="item">The ViewModel that was created.</param>
+    protected virtual void OnMaterialized(DataItem<TViewModel> item)
+    {
     }
 
     /// <summary>
