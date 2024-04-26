@@ -281,7 +281,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
                 item = DataItem.Create(viewModel);
 
-                if (index >= 0)
+                if (index >= 0 && _collection.Count > index)
                 {
                     _collection.Insert(index, item);
                 }

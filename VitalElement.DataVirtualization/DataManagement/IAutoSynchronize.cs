@@ -1,12 +1,12 @@
 namespace VitalElement.DataVirtualization.DataManagement;
 
-using System;
 using System.ComponentModel;
-using System.Reactive;
 
 public interface IAutoSynchronize : INotifyPropertyChanged
 {
-    bool IsManaged { get; set; }
+    bool CanSave { get; set; }
     
-    IObservable<Unit> OnDeleteRequested { get; }
+    IDataManager? DataManager { get; set; }
+    
+    bool IsManaged { get; set; }
 }

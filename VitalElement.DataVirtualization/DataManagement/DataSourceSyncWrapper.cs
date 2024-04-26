@@ -7,6 +7,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading.Tasks;
 using Extensions;
 
 internal static class DataSourceSyncManager
@@ -20,7 +21,7 @@ internal static class DataSourceSyncManager
     }
 
     private class DataSourceSyncWrapper<TViewModel, TModel>
-        : IDisposable
+        : IDisposable, IDataManager
         where TViewModel : class
     {
         private readonly DataSource<TViewModel, TModel> _dataSource;
@@ -47,6 +48,7 @@ internal static class DataSourceSyncManager
             _viewModel = viewModel;
 
             viewModel.IsManaged = true;
+            viewModel.DataManager = this;
 
             _subscriptions = new CompositeDisposable();
 
@@ -69,11 +71,6 @@ internal static class DataSourceSyncManager
             observeChanges.Do(OnUpdate)
                 .Subscribe()
                 .DisposeWith(_subscriptions);
-
-            viewModel.OnDeleteRequested
-                .Do(OnDelete)
-                .Subscribe()
-                .DisposeWith(_subscriptions);
         }
 
         void IDisposable.Dispose()
@@ -81,15 +78,23 @@ internal static class DataSourceSyncManager
             _viewModel.IsManaged = false;
             _subscriptions.Dispose();
         }
+        
+        public Task SaveAsync()
+        {
+            return _dataSource.UpdateAsync(_item.Item);
+        }
+
+        public async Task DeleteAsync()
+        {
+            await _dataSource.DeleteAsync(_item);
+        }
 
         private async void OnUpdate(Unit unit)
         {
-            await _dataSource.UpdateAsync(_item.Item);
-        }
-        
-        private async void OnDelete(Unit unit)
-        {
-            await _dataSource.DeleteAsync(_item);
+            if (_viewModel.CanSave)
+            {
+                await _dataSource.UpdateAsync(_item.Item);
+            }
         }
 
         private void OnViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs args)
