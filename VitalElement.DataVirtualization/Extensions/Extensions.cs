@@ -1,12 +1,31 @@
 namespace VitalElement.DataVirtualization.Extensions;
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using DataManagement;
+using Interfaces;
+using Pageing;
 
 public static class Extensions
 {
+    public static DataSource? GetDataSource<TViewModel>(this IReadOnlyObservableCollection<DataItem<TViewModel>> items)
+        where TViewModel : class
+    {
+        if(items is VirtualizingObservableCollection<DataItem<TViewModel>> collection)
+        {
+            var provider = collection.Provider;
+
+            if (provider is PaginationManager<DataItem<TViewModel>> paginationManager)
+            {
+                return paginationManager.ProviderAsync as DataSource;
+            }
+        }
+
+        return null;
+    }
+
     public static DataSource<TViewModel, T> AddSortDescription<TViewModel, T, TProperty>(this DataSource<TViewModel, T> source, Expression<Func<T, TProperty>> propertyExpression, ListSortDirection direction)
         where TViewModel : class
     {

@@ -13,6 +13,12 @@ using Pageing;
 public class DataSource
 {
     public static IDataSourceCallbacks? DataSourceCallbacks;
+    
+    /// <summary>
+    /// Indicates that the count property has been accessed at least once.
+    /// This means that a DataGrid or List has connected to the datasource.
+    /// </summary>
+    public bool IsInitialised { get; protected internal set; }
 }
 
 public abstract class DataSource<TViewModel> : DataSource<TViewModel, TViewModel> where TViewModel : class
@@ -46,12 +52,6 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
         SortDescriptionList.CollectionChanged += (_, _) => Invalidate();
     }
-
-    /// <summary>
-    /// Indicates that the count property has been accessed at least once.
-    /// This means that a DataGrid or List has connected to the datasource.
-    /// </summary>
-    public bool IsInitialised { get; private set; }
 
     /// <summary>
     /// Indicates if the datasource is Threadsafe.
