@@ -461,6 +461,11 @@
         {
             InternalInsertAt(index, item);
         }
+        
+        public virtual void MoveItem(int oldIndex, int newIndex)
+        {
+            InternalMoveItem(oldIndex, newIndex);
+        }
 
         /// <inheritdoc />
         /// <summary>
@@ -921,6 +926,21 @@
                 var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index);
                 RaiseCollectionChangedEvent(args);
             }
+        }
+
+        private bool InternalMoveItem(int oldIndex, int newIndex, object timestamp = null)
+        {
+            if (!(Provider is IEditableProviderIndexBased<T> edit)) return false;
+
+            T obj = this[oldIndex];
+            
+            edit.OnRemove(oldIndex, timestamp);
+            edit.OnInsert(newIndex, obj, timestamp);
+
+            var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, obj, newIndex, oldIndex);
+            RaiseCollectionChangedEvent(args);
+
+            return true;
         }
 
         private bool InternalRemoveAt(int index, object timestamp = null)

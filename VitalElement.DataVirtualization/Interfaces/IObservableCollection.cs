@@ -13,6 +13,8 @@
     {
         new int Count { get; }
         new bool Remove(object item);
+
+        void MoveItem(int oldIndex, int newIndex);
     }
 
     public interface IObservableCollection : ICollection, INotifyCollectionChanged
