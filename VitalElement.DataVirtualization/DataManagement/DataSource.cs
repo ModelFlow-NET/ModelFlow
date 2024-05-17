@@ -80,11 +80,14 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <param name="invalidate">If the datasource should be invalidated when setting the query. (Default true)</param>
     public void SetFilterQuery(Func<IQueryable<TModel>, IQueryable<TModel>>? filterQuery, bool invalidate = true)
     {
-        _filterQuery = filterQuery;
-
-        if (invalidate)
+        if (_filterQuery != filterQuery)
         {
-            Invalidate();
+            _filterQuery = filterQuery;
+
+            if (invalidate)
+            {
+                Invalidate();
+            }
         }
     }
 
