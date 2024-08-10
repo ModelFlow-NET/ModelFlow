@@ -629,13 +629,20 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     {
         var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
 
+        if (items.Count != count)
+        {
+            throw new Exception(
+                "The number of items returned from the data source is different than expected. This has caused an inconsistent state. Check the DataSource implementation." +
+                this.GetType().FullName);
+        }
+
         var result = new List<DataItem<TViewModel>>();
 
         var completionSource = new TaskCompletionSource<bool>();
 
         await VirtualizationManager.Instance.RunOnUiAsync(new ActionVirtualizationWrapper(async () =>
         {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < items.Count; i++)
             {
                 result.Add(await Materialize(page, i, items[i]));
             }
