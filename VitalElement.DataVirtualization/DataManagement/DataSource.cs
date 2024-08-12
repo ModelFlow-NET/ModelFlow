@@ -1,20 +1,23 @@
 namespace VitalElement.DataVirtualization.DataManagement;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Actions;
 using Interfaces;
 using Pageing;
 
-public class DataSource : INotifyPropertyChanged
+public abstract class DataSource : INotifyPropertyChanged
 {
     public static IDataSourceCallbacks? DataSourceCallbacks;
     private bool _isInitialised;
+    private bool _isActive;
 
     /// <summary>
     /// Indicates that the count property has been accessed at least once.
@@ -31,19 +34,24 @@ public class DataSource : INotifyPropertyChanged
         }
     }
 
+    public bool IsActive
+    {
+        get => _isActive;
+        protected internal set
+        {
+            if(value == _isActive) return;
+            _isActive = value;
+            OnPropertyChanged();
+        }
+    }
+    
+    public abstract IEnumerable DataCollection { get; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
     }
 }
 
@@ -124,6 +132,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// via the datasource.
     /// </summary>
     public IReadOnlyObservableCollection<DataItem<TViewModel>> Collection => _collection;
+
+    public override IEnumerable DataCollection => Collection;
 
     /// <summary>
     /// A list of sort descriptions that can be changed.
@@ -653,6 +663,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     async Task<IEnumerable<DataItem<TViewModel>>> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetItemsAtAsync(ISourcePage<DataItem<TViewModel>> page,
         int offset, int count)
     {
+        StartOperation();
         var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
 
         if (items.Count != count)
@@ -677,6 +688,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         }));
 
         await completionSource.Task;
+        
+        EndOperation();
 
         return result;
     }
@@ -697,8 +710,32 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
     async Task<int> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetCountAsync()
     {
+        StartOperation();
         var result = await GetCountAsync(BuildFilterQuery);
         IsInitialised = true;
+        EndOperation();
         return result;
+    }
+
+    private int _operationCount;
+
+    private void StartOperation()
+    {
+        var operations = Interlocked.Increment(ref _operationCount);
+
+        if (operations > 0)
+        {
+            IsActive = true;
+        }
+    }
+
+    private void EndOperation()
+    {
+        var operations = Interlocked.Decrement(ref _operationCount);
+
+        if (operations <= 0)
+        {
+            IsActive = false;
+        }
     }
 }
