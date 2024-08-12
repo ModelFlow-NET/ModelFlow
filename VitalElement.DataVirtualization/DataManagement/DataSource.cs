@@ -5,20 +5,46 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Actions;
 using Interfaces;
 using Pageing;
 
-public class DataSource
+public class DataSource : INotifyPropertyChanged
 {
     public static IDataSourceCallbacks? DataSourceCallbacks;
-    
+    private bool _isInitialised;
+
     /// <summary>
     /// Indicates that the count property has been accessed at least once.
     /// This means that a DataGrid or List has connected to the datasource.
     /// </summary>
-    public bool IsInitialised { get; protected internal set; }
+    public bool IsInitialised
+    {
+        get => _isInitialised;
+        protected internal set
+        {
+            if (value == _isInitialised) return;
+            _isInitialised = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }
 
 public abstract class DataSource<TViewModel> : DataSource<TViewModel, TViewModel> where TViewModel : class
