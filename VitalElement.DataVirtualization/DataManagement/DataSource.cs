@@ -457,7 +457,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
     public Task<IEnumerable<TModel>> GetModelsAtAsync(int offset, int count)
     {
-        return GetItemsAtAsync(offset, count, BuildFilterSortQuery);
+        return GetItemsAtAsync(offset, count, x => BuildFilterSortQuery(x, _filterQuery));
     }
 
     /// <summary>
@@ -559,7 +559,7 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// <returns>the index or -1 if an item was not in the datasource.</returns>
     public async Task<int> IndexOfAsync(TViewModel item)
     {
-        return await IndexOfAsync(item, BuildFilterSortQuery);
+        return await IndexOfAsync(item, x => BuildFilterSortQuery(x, _filterQuery));
     }
 
     private IQueryable<TModel> AddSorting(IQueryable<TModel> query, ListSortDirection sortDirection,
@@ -627,11 +627,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         return queryable;
     }
 
-    private IQueryable<TModel> BuildFilterSortQuery(IQueryable<TModel> queryable)
+    private IQueryable<TModel> BuildFilterSortQuery(IQueryable<TModel> queryable, Func<IQueryable<TModel>, IQueryable<TModel>>? filterQuery)
     {
-        if (_filterQuery is not null)
+        if (filterQuery is not null)
         {
-            queryable = _filterQuery(queryable);
+            queryable = filterQuery(queryable);
         }
 
         var sorting = SortDescriptionList;
@@ -661,10 +661,12 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     }
 
     async Task<IEnumerable<DataItem<TViewModel>>> IPagedSourceProviderAsync<DataItem<TViewModel>>.GetItemsAtAsync(ISourcePage<DataItem<TViewModel>> page,
-        int offset, int count)
+        int offset, int count, Action? signal)
     {
         StartOperation();
-        var items = (await GetItemsAtAsync(offset, count, BuildFilterSortQuery)).ToList();
+        var filter = _filterQuery;
+        signal?.Invoke();
+        var items = (await GetItemsAtAsync(offset, count, x => BuildFilterSortQuery(x, filter))).ToList();
 
         if (items.Count != count)
         {

@@ -21,6 +21,7 @@
         private readonly Dictionary<int, PageDelta> _deltas = new Dictionary<int, PageDelta>();
         private readonly Dictionary<int, ISourcePage<T>> _pages = new Dictionary<int, ISourcePage<T>>();
         private readonly IPageReclaimer<T> _reclaimer;
+        private AutoResetEvent _filterCaptureSignal = new AutoResetEvent(false);
 
         private readonly Dictionary<int, CancellationTokenSource> _tasks =
             new Dictionary<int, CancellationTokenSource>();
@@ -1026,8 +1027,13 @@
                             ret = newPage;
 
                             var cts = StartPageRequest(newPage.Page);
-                            Task.Run(() => DoRealPageGet(voc, newPage, pageOffset, index, cts), cts.Token)
+                            _filterCaptureSignal.Reset();
+                            Task.Run(async () =>
+                                {
+                                    await DoRealPageGet(voc, newPage, pageOffset, index, () => _filterCaptureSignal.Set(), cts);
+                                }, cts.Token)
                                 .ConfigureAwait(false);
+                            _filterCaptureSignal.WaitOne();
                         }
                         else
                         {
@@ -1063,7 +1069,7 @@
             return newPage;
         }
 
-        private async Task DoRealPageGet(object voc, ISourcePage<T> page, int pageOffset, int index,
+        private async Task DoRealPageGet(object voc, ISourcePage<T> page, int pageOffset, int index, Action signal,
             CancellationTokenSource cts)
         {
             if (cts.IsCancellationRequested)
@@ -1071,7 +1077,7 @@
                 return;
             }
 
-            var data = new PagedSourceItemsPacket<T>(await ProviderAsync.GetItemsAtAsync(page, pageOffset, page.ItemsPerPage));
+            var data = new PagedSourceItemsPacket<T>(await ProviderAsync.GetItemsAtAsync(page, pageOffset, page.ItemsPerPage, signal));
 
             if (cts.IsCancellationRequested)
             {
