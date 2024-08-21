@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build ModelFlow/ModelFlow.csproj --no-restore
     - name: Test
-      run: dotnet test ModelFlow.Tests/ModelFlow.Tests.csproj --no-build --verbosity normal
+      run: dotnet test ModelFlow.Tests/ModelFlow.Tests.csproj --verbosity normal
