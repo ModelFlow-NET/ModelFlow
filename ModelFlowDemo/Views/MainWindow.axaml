@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DataGridAsyncDemoMVVM"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="DataGridAsyncDemoMVVM.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        x:CompileBindings="True"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="ModelFlowDemo">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Spacing="20">
+            <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
+            <TextBlock Text="{Binding RandomIndex}" />
+
+            <Button Content="Create New" Command="{Binding CreateCommand}" />
+        </StackPanel>
+        <TabControl>
+            <TabItem Header="TreeDataGrid">
+                <TreeDataGrid Source="{Binding ItemSource}" />
+            </TabItem>
+
+            <TabItem Header="ListBox">
+                <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="{Binding Item.Id}" />
+                                    <TextBlock Text="{Binding Item.Str1}" />
+                                    <TextBlock Text="{Binding Item.Str2}" />
+                                    <Button Content="Delete" Command="{Binding Item.DeleteCommand}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="{Binding IsLoading}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </TabItem>
+
+            <TabItem Header="ComboBox">
+                <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Item.Id}" />
+                                    <TextBlock Text="{Binding Item.Str1}" />
+                                    <TextBlock Text="{Binding Item.Str2}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding IsLoading}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
