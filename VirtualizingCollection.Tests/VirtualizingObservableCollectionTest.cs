@@ -1,6 +1,5 @@
 ﻿namespace VirtualizingCollection.Tests
 {
-    using System.ComponentModel;
     using System.Reactive.Linq;
     using DataGridAsyncDemoMVVM;
     using FluentAssertions;
@@ -20,8 +19,21 @@
             return Task.CompletedTask;
         }
 
-        [Fact]
-        public async Task? Deleting_Last_Item_Not_At_Page_Boundary_Removes_The_Correct_Item()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(24)]
+        [InlineData(25)]
+        [InlineData(26)]
+        [InlineData(49)]
+        [InlineData(50)]
+        [InlineData(51)]
+        [InlineData(76)]
+        [InlineData(75)]
+        [InlineData(74)]
+        [InlineData(101)]
+        [InlineData(100)]
+        [InlineData(99)]
+        public async Task? Deleting_Last_Item_Not_At_Page_Boundary_Removes_The_Correct_Item(int offsetFromEnd)
         {
             var dataSource = new RemoteOrDbDataSource();
             
@@ -34,7 +46,7 @@
 
             Assert.Equal(1025, dataSource.Collection.Count);
 
-            var item = dataSource.Collection[^1];
+            var item = dataSource.Collection[^offsetFromEnd];
 
             Assert.True(item.IsLoading);
 
@@ -43,13 +55,13 @@
             
             Assert.False(item.IsLoading);
 
-            Assert.Same(item, dataSource.Collection[^1]);
+            Assert.Same(item, dataSource.Collection[^offsetFromEnd]);
             
             await dataSource.DeleteAsync(item);
 
             Assert.Equal(1024, dataSource.Collection.Count);
 
-            Assert.NotSame(item, dataSource.Collection[^1]);
+            Assert.NotSame(item, dataSource.Collection[^offsetFromEnd]);
         }
 
         [Fact]
@@ -74,7 +86,7 @@
             // Check when IsLoading changes, the item is already wrapping the correct model.
             item.WhenAnyValue(x => x.IsLoading)
                 .Skip(1)
-                .Do(x =>
+                .Do(_ =>
                 {
                     Assert.False(item.IsLoading);
                     Assert.Same(dataSource.Emulation.Items[^1], item.Item.Model);
@@ -84,7 +96,7 @@
             // Check when the item changes the IsLoading is correct and the models are set correctly.
             item.WhenAnyValue(x => x.Item)
                 .Skip(1)
-                .Do(x =>
+                .Do(_ =>
                 {
                     Assert.False(item.IsLoading);
                     Assert.Same(dataSource.Emulation.Items[^1], item.Item.Model);
@@ -99,5 +111,6 @@
             Assert.False(item.IsLoading);
             Assert.Same(dataSource.Emulation.Items[^1], item.Item.Model);
         }
+        
     }
 }

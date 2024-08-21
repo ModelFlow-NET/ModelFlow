@@ -145,7 +145,10 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
     /// Called when the datasource is reset.
     /// </summary>
     /// <param name="count">The number of items in the datasource.</param>
-    protected abstract void OnReset(int count);
+    protected virtual void OnReset(int count)
+    {
+        // do nothing.
+    }
 
     /// <summary>
     /// Determines if the datasource contains a viewmodel.
@@ -739,5 +742,74 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         {
             IsActive = false;
         }
+    }
+}
+
+public abstract class SelectableReadOnlyDataSource<TViewModel, TModel> : DataSource<TViewModel, TModel> where TViewModel : class
+{
+    protected SelectableReadOnlyDataSource(Func<TModel, TViewModel> selector, int pageSize, int maxPages, bool autoSync = true) : base(selector, pageSize, maxPages, autoSync)
+    {
+    }
+
+    public sealed override Task<TModel?> GetItemAsync(Expression<Func<TModel, bool>> predicate)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override Task<bool> DoCreateAsync(TViewModel item)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override Task<bool> DoUpdateAsync(TViewModel viewModel)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override Task<bool> DoDeleteAsync(TViewModel item)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public abstract class ReadOnlyDataSource<TViewModel, TModel> : DataSource<TViewModel, TModel> where TViewModel : class
+{
+    public ReadOnlyDataSource(Func<TModel, TViewModel> selector, int pageSize, int maxPages, bool autoSync = true) : base(selector, pageSize, maxPages, autoSync)
+    {
+    }
+
+    protected sealed override Task<bool> ContainsAsync(TViewModel item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public sealed override Task<TModel?> GetItemAsync(Expression<Func<TModel, bool>> predicate)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override TModel? GetModelForViewModel(TViewModel viewModel)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override bool ModelsEqual(TModel a, TModel b)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override Task<bool> DoCreateAsync(TViewModel item)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override Task<bool> DoUpdateAsync(TViewModel viewModel)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected sealed override Task<bool> DoDeleteAsync(TViewModel item)
+    {
+        throw new NotImplementedException();
     }
 }

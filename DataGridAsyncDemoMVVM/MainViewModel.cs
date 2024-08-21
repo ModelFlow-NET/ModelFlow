@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using System.Windows.Input;
     using Avalonia.Controls;
     using Avalonia.Controls.Models.TreeDataGrid;
@@ -10,9 +9,8 @@
     using CommunityToolkit.Mvvm.ComponentModel;
     using ReactiveUI;
     using ViewModels;
-    using VitalElement.DataVirtualization;
     using VitalElement.DataVirtualization.DataManagement;
-    using VitalElement.DataVirtualization.Pageing;
+    using VitalElement.DataVirtualization.Extensions;
 
 
     public partial class MainViewModel : ViewModelBase
@@ -30,15 +28,18 @@
             Items = dataSource.Collection;
 
             var source = new FlatTreeDataGridSource<DataItem<RemoteItemViewModel>>(dataSource.Collection);
+
+            var dsource = dataSource.Collection.GetDataSource();
             
             source.Columns.Add(new TextColumn<DataItem<RemoteItemViewModel>, string>(new NameHeaderViewModel(dataSource, x=>x.Name), x => x.Item.Name, options: new TextColumnOptions<DataItem<RemoteItemViewModel>>
             {
                 CanUserSortColumn = false
             }));
+            source.AddAutoColumn("String1", x => x.Item.Str1);/*
             source.Columns.Add(new TextColumn<DataItem<RemoteItemViewModel>, string>("String 1", x => x.Item.Str1, options: new TextColumnOptions<DataItem<RemoteItemViewModel>>
             {
                 CanUserSortColumn = false
-            }));
+            }));*/
             source.Columns.Add(new TextColumn<DataItem<RemoteItemViewModel>, string>("String 2", x => x.Item.Str2, options: new TextColumnOptions<DataItem<RemoteItemViewModel>>
             {
                 CanUserSortColumn = false

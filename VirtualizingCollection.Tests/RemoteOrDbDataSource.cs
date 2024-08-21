@@ -15,9 +15,11 @@ public class RemoteOrDbDataSource : DataSource<RemoteItemViewModel, RemoteOrDbDa
     private readonly IQueryable<RemoteOrDbDataItem> _remoteDatas;
 
     private readonly Random _rand = new();
-    
+
     public RemoteOrDbDataSourceEmulation Emulation { get; }
-        
+
+    public event EventHandler? OnMaterializedCalled;
+
     public RemoteOrDbDataSource() : base (x=> new RemoteItemViewModel(x), 50, 4)
     {
         this.AddSortDescription(x => x.Id, ListSortDirection.Ascending);
@@ -91,5 +93,12 @@ public class RemoteOrDbDataSource : DataSource<RemoteItemViewModel, RemoteOrDbDa
     protected override RemoteOrDbDataItem? GetModelForViewModel(RemoteItemViewModel viewModel)
     {
         return viewModel.Model;
+    }
+
+    protected override void OnMaterialized(DataItem<RemoteItemViewModel> item)
+    {
+        base.OnMaterialized(item);
+        
+        OnMaterializedCalled?.Invoke(this, EventArgs.Empty);
     }
 }

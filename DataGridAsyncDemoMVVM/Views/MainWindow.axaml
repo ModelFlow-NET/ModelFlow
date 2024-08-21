@@ -9,15 +9,19 @@
         x:CompileBindings="True"
         Icon="/Assets/avalonia-logo.ico"
         Title="DataGridAsyncDemoMVVM">
-    <TabControl>
-        <TabItem Header="ListBox">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Spacing="20">
-                    <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
-                    <TextBlock Text="{Binding RandomIndex}"/>
-                    
-                    <Button Content="Create New" Command="{Binding CreateCommand}" />
-                </StackPanel>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Spacing="20">
+            <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
+            <TextBlock Text="{Binding RandomIndex}" />
+
+            <Button Content="Create New" Command="{Binding CreateCommand}" />
+        </StackPanel>
+        <TabControl>
+            <TabItem Header="TreeDataGrid">
+                <TreeDataGrid Source="{Binding ItemSource}" />
+            </TabItem>
+
+            <TabItem Header="ListBox">
                 <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -35,16 +39,9 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </DockPanel>
-        </TabItem>
-        
-        <TabItem Header="ComboBox">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Spacing="20">
-                    <Button Content="Select Random" Command="{Binding SelectRandomCommand}" />
-                    <TextBlock Text="{Binding RandomIndex}"/>
-                </StackPanel>
-                
+            </TabItem>
+
+            <TabItem Header="ComboBox">
                 <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
@@ -61,7 +58,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-            </DockPanel>
-        </TabItem>
-    </TabControl>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>

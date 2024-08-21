@@ -10,14 +10,18 @@
 
     public class RemoteItemViewModel : ViewModelBase, IAutoSynchronize
     {
-        private Subject<Unit> _subject;
         private readonly RemoteOrDbDataItem _model;
         
         public RemoteItemViewModel(RemoteOrDbDataItem model)
         {
             _model = model;
-            _subject = new();
-            DeleteCommand = ReactiveCommand.Create(() => _subject.OnNext(Unit.Default));
+            DeleteCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                if (DataManager != null)
+                {
+                    await DataManager.DeleteAsync();
+                }
+            });
         }
 
         public RemoteOrDbDataItem Model => _model;
@@ -29,11 +33,13 @@
         public string Str1 => Model.Str1;
         public string Str2 => Model.Str2;
 
+        public bool CanSave { get; set; } = true;
+        
+        public IDataManager? DataManager { get; set; }
+        
         public bool IsManaged { get; set; }
         
         public ICommand DeleteCommand { get; }
-
-        public IObservable<Unit> OnDeleteRequested => _subject;
     }
     
     public class RemoteOrDbDataItem
