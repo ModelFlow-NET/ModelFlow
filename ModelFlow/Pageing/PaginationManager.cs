@@ -302,19 +302,20 @@
                 if (!IsAsync)
                 {
                     LocalCount = Provider.Count;
+                    _hasGotCount = true;
                 }
                 else if (!asyncOk)
                 {
                     LocalCount = ProviderAsync.GetCountAsync().GetAwaiter().GetResult();
+                    _hasGotCount = true;
                 }
                 else
                 {
                     var cts = StartPageRequest(int.MinValue);
-                    GetCountAsync(cts);
+                    Task.Run(async ()=> await GetCountAsync(cts), cts.Token);
                 }
             }
-
-            _hasGotCount = true;
+            
             return LocalCount;
         }
 
@@ -845,7 +846,7 @@
             newPage.PageFetchState = PageFetchStateEnum.Fetched;
         }*/
 
-        private async void GetCountAsync(CancellationTokenSource cts)
+        private async Task GetCountAsync(CancellationTokenSource cts)
         {
             if (!cts.IsCancellationRequested)
             {
