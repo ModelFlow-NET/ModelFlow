@@ -235,6 +235,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
 
         var count = await GetCountAsync(BuildFilterQuery); // use last count to reduce calls.
 
+        if (count <= 0)
+        {
+            return -1;
+        }
+
         // Initialize start and end indices for binary search
         int start = 0;
         int end = count - 1;
