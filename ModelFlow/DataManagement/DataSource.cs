@@ -49,6 +49,13 @@ public abstract class DataSource : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public event EventHandler? FilterQueryCleared;
+
+    protected void RaiseFilterQueryCleared()
+    {
+        FilterQueryCleared?.Invoke(this, EventArgs.Empty);
+    }
+
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -121,6 +128,11 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
             if (invalidate)
             {
                 Invalidate();
+            }
+
+            if (filterQuery == null)
+            {
+                RaiseFilterQueryCleared();
             }
         }
     }
@@ -306,6 +318,8 @@ public abstract class DataSource<TViewModel, TModel> : DataSource, IPagedSourceP
         // Ensure the datasource is initialised, otherwise it can cause a race condition
         // The insert will want to ask for the count in a sync fashion.
         await EnsureInitialisedAsync();
+
+        SetFilterQuery(null, true);
 
         try
         {
